@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 01 — Cybersecurity Fundamentals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Styling */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc; /* Tailwind slate-50 */
+            color: #1e293b; /* Tailwind slate-800 */
+            overflow-x: hidden;
+        }
+
+        /* Chart Container Strict Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Transitions */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .nav-active {
+            background-color: #e2e8f0;
+            font-weight: 600;
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-slate-800 bg-slate-50">
+
+    <!-- Chosen Palette: Warm Neutrals with Trust Accents (Slate/Gray base, Blue primary accent, Green/Amber indicators) -->
+    <!-- Application Structure Plan: The SPA is structured as an interactive educational dashboard. It uses a persistent sidebar for non-linear navigation between core lecture modules (Overview, Core Concepts, Threats, Cryptography, Frameworks & Risk, Labs). This structure was chosen because educational material is best consumed in logical chunks, and allowing students to jump between topics (e.g., mapping a threat back to the CIA triad) reinforces learning better than a static, linear document. -->
+    <!-- Visualization & Content Choices: 
+         1. Availability Targets -> Goal: Inform/Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Hover tooltips -> Justification: Shows exponential difficulty of adding "9s" to uptime.
+         2. Threat Bestiary -> Goal: Organize/Inform -> Viz: Filterable Grid -> Interaction: Category buttons -> Justification: Helps memorize the large taxonomy of threats.
+         3. Risk Assessment -> Goal: Analyze -> Viz: Interactive Calculator -> Interaction: Sliders for L and I -> Justification: Transforms a static formula into an active learning tool.
+         - Confirming NO SVG/Mermaid used. Unicode icons and standard DOM elements used instead. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-64 bg-slate-100 border-r border-slate-200 flex flex-col justify-between hidden md:flex h-full z-10 shrink-0">
+        <div>
+            <div class="p-6 border-b border-slate-200">
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Cyber.SoHo Hub</h1>
+                <p class="text-xs text-slate-500 mt-1">Course: 420-D01-AB</p>
+                <p class="text-xs text-slate-500">Cohort: CYB-01</p>
+            </div>
+            <ul class="flex flex-col py-4" id="nav-menu">
+                <li><button onclick="nav('overview')" id="nav-overview" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors nav-active">📊 Overview & Agenda</button></li>
+                <li><button onclick="nav('concepts')" id="nav-concepts" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors">🛡️ Core Concepts (CIA)</button></li>
+                <li><button onclick="nav('threats')" id="nav-threats" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors">🦠 Threat Bestiary</button></li>
+                <li><button onclick="nav('crypto')" id="nav-crypto" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors">🔐 Cryptography</button></li>
+                <li><button onclick="nav('frameworks')" id="nav-frameworks" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors">📋 Frameworks & Risk</button></li>
+                <li><button onclick="nav('labs')" id="nav-labs" class="w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-200 transition-colors">💻 Labs & Exercises</button></li>
+            </ul>
+        </div>
+        <div class="p-6 border-t border-slate-200 text-xs text-slate-400">
+            Competency: EZ01<br>
+            Preventive Surveillance
+        </div>
+    </nav>
+
+    <!-- Mobile Header (Visible only on small screens) -->
+    <div class="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-100 border-b border-slate-200 flex items-center justify-between px-4 z-20">
+        <h1 class="text-lg font-bold text-slate-800">Cyber.SoHo Hub</h1>
+        <select onchange="nav(this.value)" class="bg-white border border-slate-300 text-slate-700 text-sm rounded focus:ring-blue-500 focus:border-blue-500 block p-2">
+            <option value="overview">📊 Overview & Agenda</option>
+            <option value="concepts">🛡️ Core Concepts</option>
+            <option value="threats">🦠 Threat Bestiary</option>
+            <option value="crypto">🔐 Cryptography</option>
+            <option value="frameworks">📋 Frameworks & Risk</option>
+            <option value="labs">💻 Labs</option>
+        </select>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-white mt-16 md:mt-0 p-6 md:p-12 relative w-full">
+        <div class="max-w-5xl mx-auto pb-20">
+
+            <!-- SECTION: OVERVIEW -->
+            <section id="sec-overview" class="block fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Day 01: Cybersecurity Fundamentals</h2>
+                    <p class="text-slate-500 mt-2">Welcome to Preventive Surveillance in Cybersecurity. This dashboard serves as your interactive study companion for Day 01.</p>
+                </header>
+                
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">This section provides a high-level view of today's learning objectives and agenda. It sets the stage for the technical deep-dives ahead, ensuring you understand the roadmap of the day.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-800">📅 Today's Agenda</h3>
+                        <ul class="space-y-3 text-slate-600">
+                            <li class="flex items-start"><span class="mr-2">⏱️</span> <strong>Lecture 1:</strong> CIA Triad + Cyber Threat Types (60 min)</li>
+                            <li class="flex items-start"><span class="mr-2">⏱️</span> <strong>Exercise 1:</strong> Recent Incidents Case Study (45 min)</li>
+                            <li class="flex items-start"><span class="mr-2">⏱️</span> <strong>Lecture 2:</strong> Cryptography + NIST/ISO/CIS (60 min)</li>
+                            <li class="flex items-start"><span class="mr-2">⏱️</span> <strong>Exercise 2:</strong> Build Topology in AWS / VirtualBox / GNS3 (45 min)</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 shadow-sm">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-800">🎯 End of Day Toolbox</h3>
+                        <ul class="space-y-2 text-slate-600 list-disc pl-5">
+                            <li>The CIA triad as a defensive mental model</li>
+                            <li>A working vocabulary of cyber threats</li>
+                            <li>Three crypto primitives and when to use each</li>
+                            <li>NIST, ISO, CIS — the three big-name frameworks</li>
+                            <li>A lab environment ready for Labs 1 through 6</li>
+                            <li>Two artifacts started for your Course Procedure Manual</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: CORE CONCEPTS -->
+            <section id="sec-concepts" class="hidden fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Core Concepts & Principles</h2>
+                </header>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">Here we explore the foundational pillars of cybersecurity: The CIA Triad, the Principle of Least Privilege, and the balance between Security and Performance. Interact with the Triad cards to see specific tools, and review the chart to understand the mathematical reality of Availability targets.</p>
+                </div>
+
+                <h3 class="text-2xl font-bold text-slate-800 mb-6">The CIA Triad</h3>
+                <p class="text-slate-600 mb-6 italic">"Every security control on Earth ultimately props up one of these three legs. Lose a leg → the stool falls."</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <!-- C -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden" onclick="toggleDetails('detail-c')">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">👁️ Confidentiality</h4>
+                        <p class="text-sm text-slate-600">Only authorized eyes see the data.</p>
+                        <div id="detail-c" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm">
+                            <strong class="text-slate-700">Tools:</strong> Encryption, ACLs, RBAC, MFA, Least Privilege.
+                        </div>
+                        <p class="text-xs text-blue-500 mt-4 group-hover:underline">Click to expand tools</p>
+                    </div>
+                    <!-- I -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden" onclick="toggleDetails('detail-i')">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">⚖️ Integrity</h4>
+                        <p class="text-sm text-slate-600">Data read = data written.</p>
+                        <div id="detail-i" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm">
+                            <strong class="text-slate-700">Tools:</strong> Hashes (SHA-256, SHA-3), Digital Signatures, FIM.
+                        </div>
+                        <p class="text-xs text-emerald-500 mt-4 group-hover:underline">Click to expand tools</p>
+                    </div>
+                    <!-- A -->
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden" onclick="toggleDetails('detail-a')">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-amber-500"></div>
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">⏱️ Availability</h4>
+                        <p class="text-sm text-slate-600">Reachable when needed.</p>
+                        <div id="detail-a" class="hidden mt-4 pt-4 border-t border-slate-100 text-sm">
+                            <strong class="text-slate-700">Tools:</strong> Redundancy, Failover, DDoS protection, Backups.
+                        </div>
+                        <p class="text-xs text-amber-500 mt-4 group-hover:underline">Click to expand tools</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                    <div class="bg-slate-800 text-white p-6 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-bold mb-3 flex items-center">🔑 Least Privilege</h3>
+                        <p class="text-slate-300 text-sm mb-4">Default deny → then add the minimum. Codified in <strong>NIST SP 800-53 AC-6</strong>.</p>
+                        <div class="bg-slate-700 p-3 rounded border border-slate-600 text-sm">
+                            <span class="text-yellow-400 font-bold">Key Takeaway:</span> Least privilege is the cheapest, highest-impact control you will ever implement. Most breaches trace back to a violation of this.
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="text-xl font-bold mb-3 flex items-center text-slate-800">⚖️ Performance vs Security</h3>
+                        <p class="text-slate-600 text-sm mb-4">Every control has a cost: CPU, disk, latency. Captured in EZ01 element 1.4.</p>
+                        <div class="bg-white p-3 rounded border border-slate-200 text-sm text-slate-700">
+                            <span class="text-blue-600 font-bold">Key Takeaway:</span> A perfectly secure system is unplugged and useless. A perfectly fast system is unprotected and doomed. The goal is balance.
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="text-2xl font-bold text-slate-800 mb-2">Availability Targets (The "Nines")</h3>
+                <p class="text-slate-600 mb-6 text-sm">"Available" is a number, not an adjective. Pick the tier the business needs and engineer to it. Notice the dramatic drop in allowed downtime as you add 9s.</p>
+                
+                <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+                    <div class="chart-container">
+                        <canvas id="availabilityChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: THREAT BESTIARY -->
+            <section id="sec-threats" class="hidden fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Cyber Threat Bestiary</h2>
+                </header>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">You cannot defend against what you cannot name. This interactive directory categorizes the core threats. Use the filters to explore specific vectors, and review the Mapping table to see how specific threats attack the CIA triad and how we defend against them.</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2 mb-6" id="threat-filters">
+                    <button onclick="filterThreats('All')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-800 text-white">All</button>
+                    <button onclick="filterThreats('Malware')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300">Malware</button>
+                    <button onclick="filterThreats('Network')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300">Network</button>
+                    <button onclick="filterThreats('Social')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300">Social Eng.</button>
+                    <button onclick="filterThreats('App')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300">App-Layer</button>
+                    <button onclick="filterThreats('Strategic')" class="px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300">Strategic</button>
+                </div>
+
+                <!-- Threat Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12" id="threat-grid">
+                    <!-- Populated by JS -->
+                </div>
+
+                <h3 class="text-2xl font-bold text-slate-800 mb-4">Defense is a Mapping Problem</h3>
+                <p class="text-slate-600 mb-6 text-sm">Pick the threat → pick the leg → pick the control.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-slate-600 border border-slate-200 rounded-lg overflow-hidden">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 border-b">Threat</th>
+                                <th scope="col" class="px-6 py-3 border-b text-center">Primary CIA Target</th>
+                                <th scope="col" class="px-6 py-3 border-b">Standard Defense</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">Ransomware</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold">A</span> <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span></td>
+                                <td class="px-6 py-4">Tested offline backups, EDR</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">DDoS</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold">A</span></td>
+                                <td class="px-6 py-4">Anycast, scrubbing, rate-limit</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">SQLi</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span> <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">I</span></td>
+                                <td class="px-6 py-4">Parameterized queries, WAF</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">Phishing</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span></td>
+                                <td class="px-6 py-4">MFA, training, email gateway</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">MITM</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span> <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">I</span></td>
+                                <td class="px-6 py-4">TLS, cert pinning</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">Insider theft</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span></td>
+                                <td class="px-6 py-4">DLP, least privilege, UEBA</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">Supply-chain</td>
+                                <td class="px-6 py-4 text-center"><span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-bold">C</span> <span class="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-bold">I</span> <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold">A</span></td>
+                                <td class="px-6 py-4">SBOM, code-signing, vendor risk</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION: CRYPTOGRAPHY -->
+            <section id="sec-crypto" class="hidden fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Cryptography Primitives</h2>
+                </header>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">Cryptography is the mathematical engine of security. This section simplifies the three main primitives (Symmetric, Asymmetric, Hash) and their specific use cases, along with vital rules for handling passwords.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    <!-- Symmetric -->
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative">
+                        <div class="text-3xl mb-3">🔏</div>
+                        <h4 class="text-lg font-bold text-slate-800">Symmetric</h4>
+                        <p class="text-xs text-slate-500 mb-4 uppercase tracking-wider">One Key</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-4">
+                            <li>✔️ AES-128/256</li>
+                            <li>✔️ ChaCha20</li>
+                        </ul>
+                        <div class="bg-slate-100 p-3 rounded text-sm font-medium text-slate-700">
+                            Fast → Bulk encryption
+                        </div>
+                    </div>
+                    <!-- Asymmetric -->
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative">
+                        <div class="text-3xl mb-3">🗝️</div>
+                        <h4 class="text-lg font-bold text-slate-800">Asymmetric</h4>
+                        <p class="text-xs text-slate-500 mb-4 uppercase tracking-wider">Key Pair</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-4">
+                            <li>✔️ RSA-2048+</li>
+                            <li>✔️ ECDSA, Ed25519</li>
+                        </ul>
+                        <div class="bg-slate-100 p-3 rounded text-sm font-medium text-slate-700">
+                            Slow → Key exchange, signatures
+                        </div>
+                    </div>
+                    <!-- Hash -->
+                    <div class="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative">
+                        <div class="text-3xl mb-3">#️⃣</div>
+                        <h4 class="text-lg font-bold text-slate-800">Hash</h4>
+                        <p class="text-xs text-slate-500 mb-4 uppercase tracking-wider">One-Way</p>
+                        <ul class="text-sm text-slate-600 space-y-2 mb-4">
+                            <li>✔️ SHA-256, SHA-3, BLAKE2/3</li>
+                            <li class="text-red-500">❌ Avoid: MD5, SHA-1</li>
+                        </ul>
+                        <div class="bg-slate-100 p-3 rounded text-sm font-medium text-slate-700">
+                            Fast → Integrity checks
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 p-6 rounded-lg text-white text-center mb-12">
+                    <p class="text-lg font-light italic">"Asymmetric to bootstrap, symmetric for bulk, hash for integrity. That's TLS in one sentence."</p>
+                </div>
+
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <h3 class="text-xl font-bold text-red-800 mb-3 flex items-center">🛑 Password Hashing Rule</h3>
+                    <p class="text-red-700 mb-4 text-sm">A plain SHA-256 of a password is <strong>broken</strong> (no salt, too fast for modern GPUs).</p>
+                    <div class="bg-white p-4 rounded border border-red-100">
+                        <p class="text-sm text-slate-700 mb-2"><strong>Use a slow Key Derivation Function (KDF):</strong></p>
+                        <div class="flex gap-3 font-mono text-xs">
+                            <span class="bg-slate-100 px-2 py-1 rounded">bcrypt</span>
+                            <span class="bg-slate-100 px-2 py-1 rounded">scrypt</span>
+                            <span class="bg-green-100 text-green-800 px-2 py-1 rounded border border-green-300 font-bold">Argon2id (OWASP Rec.)</span>
+                        </div>
+                        <p class="mt-4 text-sm text-slate-600 italic">Speed is the enemy when hashing passwords. Slow on purpose, salted always.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: FRAMEWORKS & RISK -->
+            <section id="sec-frameworks" class="hidden fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Frameworks & Risk Assessment</h2>
+                </header>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">Security isn't built on guesswork; it's built on frameworks and risk math. Use the Frameworks Cheat Sheet to map the right standard to the right scenario. Use the Interactive Risk Calculator to practice quantifying threat priorities.</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+                    <!-- Frameworks -->
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Frameworks Cheat Sheet</h3>
+                        <p class="text-sm text-slate-600 mb-4">Don't reinvent. Pick a framework, follow it, refine it.</p>
+                        <ul class="space-y-3">
+                            <li class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                <span class="block text-xs font-bold text-blue-500 uppercase">CEO conversation</span>
+                                <span class="text-slate-800 font-medium">NIST CSF 2.0</span> (Govern, Identify, Protect, Detect, Respond, Recover)
+                            </li>
+                            <li class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                <span class="block text-xs font-bold text-blue-500 uppercase">Pick US-regulated controls</span>
+                                <span class="text-slate-800 font-medium">NIST 800-53</span> (1,000+ controls)
+                            </li>
+                            <li class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                <span class="block text-xs font-bold text-blue-500 uppercase">Get certified</span>
+                                <span class="text-slate-800 font-medium">ISO 27001</span> (ISMS)
+                            </li>
+                            <li class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                <span class="block text-xs font-bold text-blue-500 uppercase">Just start somewhere</span>
+                                <span class="text-slate-800 font-medium">CIS Controls v8.1</span> (18 Prioritized)
+                            </li>
+                            <li class="bg-white p-4 rounded border border-slate-200 shadow-sm">
+                                <span class="block text-xs font-bold text-blue-500 uppercase">Harden a specific OS</span>
+                                <span class="text-slate-800 font-medium">CIS Benchmarks</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Risk Calculator -->
+                    <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2">Interactive Risk Calculator</h3>
+                        <p class="text-sm text-slate-600 mb-6 font-mono bg-white inline-block px-2 py-1 rounded border border-slate-300">Risk = Likelihood × Impact</p>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <label class="font-bold text-slate-700">Likelihood (L)</label>
+                                    <span id="val-l" class="font-mono bg-blue-100 text-blue-800 px-2 rounded">3</span>
+                                </div>
+                                <input type="range" id="slider-l" min="1" max="5" value="3" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer" oninput="calculateRisk()">
+                                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                    <span>Rare (1)</span><span>Almost Certain (5)</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <label class="font-bold text-slate-700">Impact (I)</label>
+                                    <span id="val-i" class="font-mono bg-blue-100 text-blue-800 px-2 rounded">3</span>
+                                </div>
+                                <input type="range" id="slider-i" min="1" max="5" value="3" class="w-full h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer" oninput="calculateRisk()">
+                                <div class="flex justify-between text-xs text-slate-500 mt-1">
+                                    <span>Negligible (1)</span><span>Critical (5)</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 pt-6 border-t border-slate-200 text-center">
+                                <p class="text-sm text-slate-500 uppercase tracking-widest mb-2">Calculated Risk Score</p>
+                                <div id="risk-score" class="text-5xl font-black text-amber-500 transition-colors duration-300">9</div>
+                                <p id="risk-label" class="mt-2 text-sm font-bold text-amber-700">Medium Risk</p>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-xs text-slate-500 italic text-center">
+                            "Score it, sort it, fund the top of the list."
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: LABS -->
+            <section id="sec-labs" class="hidden fade-in">
+                <header class="mb-8 border-b border-slate-200 pb-4">
+                    <h2 class="text-3xl font-bold text-slate-900">Exercises & Labs</h2>
+                </header>
+
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+                    <h3 class="text-lg font-bold text-blue-900 mb-2">Section Purpose</h3>
+                    <p class="text-blue-800">Theory must be tested. This section details the practical assignments for Day 01: investigating real-world breaches to map threats to controls, and building the virtual topology that will be used for the rest of the course.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-8 mb-12">
+                    <!-- Exercise 1 -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute right-0 top-0 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">45 min class + 2h home</div>
+                        <h3 class="text-xl font-bold text-slate-800 mb-3">Ex 1: Recent Incidents Case Study</h3>
+                        <p class="text-sm text-slate-600 mb-4">Investigate three real-world incidents. Deliverable: PDF with screenshots, CIA mapping, threat type, and mitigations.</p>
+                        
+                        <div class="space-y-3">
+                            <div class="p-3 bg-slate-50 rounded border border-slate-100 flex items-start">
+                                <span class="text-xl mr-3">🕵️</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">MOVEit / Cl0p (2023)</h4>
+                                    <p class="text-xs text-slate-500">Focus: Supply-chain + mass exfiltration</p>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded border border-slate-100 flex items-start">
+                                <span class="text-xl mr-3">🏥</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">Change Healthcare (2024)</h4>
+                                    <p class="text-xs text-slate-500">Focus: Ransomware on critical infrastructure</p>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded border border-slate-100 flex items-start">
+                                <span class="text-xl mr-3">🐧</span>
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm">XZ Utils CVE-2024-3094</h4>
+                                    <p class="text-xs text-slate-500">Focus: Multi-year supply-chain backdoor</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-sm font-medium text-slate-700 italic border-t border-slate-100 pt-3">Real incidents are the laboratory of theory. Read them like a doctor reads autopsies.</p>
+                    </div>
+
+                    <!-- Exercise 2 -->
+                    <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg relative">
+                        <div class="absolute right-0 top-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">45 min class + 2h home</div>
+                        <h3 class="text-xl font-bold mb-3">Ex 2: Build the Lab Environment</h3>
+                        <p class="text-sm text-slate-300 mb-4">Establish the minimal topology across three platforms. This becomes the environment chapter of your Course Procedure Manual.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div class="bg-slate-700 p-3 rounded">
+                                <h4 class="font-bold text-blue-300 text-sm">AWS Educate</h4>
+                                <p class="text-xs text-slate-400">Cloud, free for students</p>
+                            </div>
+                            <div class="bg-slate-700 p-3 rounded">
+                                <h4 class="font-bold text-blue-300 text-sm">VirtualBox</h4>
+                                <p class="text-xs text-slate-400">Local, offline</p>
+                            </div>
+                            <div class="bg-slate-700 p-3 rounded">
+                                <h4 class="font-bold text-blue-300 text-sm">GNS3</h4>
+                                <p class="text-xs text-slate-400">Network-emulation realism</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded border border-slate-700 text-sm font-mono text-emerald-400">
+                            Topology: 1 Router + 3 Hosts (Win-Server, Linux-Server, Analyst-VM) on 10.0.0.0/24
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Navigation Logic ---
+        const sections = ['overview', 'concepts', 'threats', 'crypto', 'frameworks', 'labs'];
+        
+        function nav(targetId) {
+            sections.forEach(sec => {
+                document.getElementById('sec-' + sec).classList.add('hidden');
+                document.getElementById('sec-' + sec).classList.remove('block');
+                const navBtn = document.getElementById('nav-' + sec);
+                if(navBtn) {
+                    navBtn.classList.remove('nav-active', 'bg-slate-200');
+                    navBtn.classList.add('text-slate-600');
+                }
+            });
+            
+            document.getElementById('sec-' + targetId).classList.remove('hidden');
+            document.getElementById('sec-' + targetId).classList.add('block');
+            
+            const activeNav = document.getElementById('nav-' + targetId);
+            if(activeNav) {
+                activeNav.classList.add('nav-active');
+                activeNav.classList.remove('text-slate-600');
+            }
+
+            // Re-render chart if navigating to concepts to ensure proper sizing
+            if(targetId === 'concepts') {
+                if(window.availChart) {
+                    window.availChart.resize();
+                } else {
+                    initChart();
+                }
+            }
+        }
+
+        // --- Core Concepts Logic ---
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            if(el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                el.classList.add('block', 'fade-in');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('block', 'fade-in');
+            }
+        }
+
+        // --- Chart.js Init (Availability Targets) ---
+        function initChart() {
+            const ctx = document.getElementById('availabilityChart').getContext('2d');
+            window.availChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Basic (99%)', 'Standard (99.9%)', 'High (99.99%)', 'Critical (99.999%)'],
+                    datasets: [{
+                        label: 'Downtime per Year (Minutes)',
+                        data: [5256, 525.6, 52.56, 5.256], // Standardized to minutes for log scale
+                        backgroundColor: [
+                            'rgba(244, 63, 94, 0.7)',  // Rose
+                            'rgba(245, 158, 11, 0.7)', // Amber
+                            'rgba(16, 185, 129, 0.7)', // Emerald
+                            'rgba(59, 130, 246, 0.7)'  // Blue
+                        ],
+                        borderColor: [
+                            'rgb(244, 63, 94)',
+                            'rgb(245, 158, 11)',
+                            'rgb(16, 185, 129)',
+                            'rgb(59, 130, 246)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let val = context.raw;
+                                    if(val > 1440) return (val/60/24).toFixed(1) + ' Days';
+                                    if(val > 60) return (val/60).toFixed(1) + ' Hours';
+                                    return val.toFixed(1) + ' Minutes';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Minutes / Year (Log Scale)' },
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    if(value === 10 || value === 100 || value === 1000 || value === 10000) {
+                                        return value;
+                                    }
+                                    return null;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Threat Bestiary Logic ---
+        const threats = [
+            { name: 'Virus', type: 'Malware' }, { name: 'Worm', type: 'Malware' },
+            { name: 'Trojan', type: 'Malware' }, { name: 'Ransomware', type: 'Malware' },
+            { name: 'Spyware', type: 'Malware' }, { name: 'Rootkit', type: 'Malware' },
+            { name: 'Cryptojacker', type: 'Malware' }, { name: 'RAT', type: 'Malware' },
+            { name: 'DoS / DDoS', type: 'Network' }, { name: 'MITM', type: 'Network' },
+            { name: 'ARP Spoofing', type: 'Network' }, { name: 'DNS Poisoning', type: 'Network' },
+            { name: 'Port Scanning', type: 'Network' },
+            { name: 'Phishing', type: 'Social' }, { name: 'Spear Phishing', type: 'Social' },
+            { name: 'Whaling', type: 'Social' }, { name: 'Vishing', type: 'Social' },
+            { name: 'Smishing', type: 'Social' }, { name: 'BEC', type: 'Social' },
+            { name: 'SQLi', type: 'App' }, { name: 'XSS', type: 'App' },
+            { name: 'CSRF', type: 'App' }, { name: 'SSRF', type: 'App' },
+            { name: 'File Upload Abuse', type: 'App' },
+            { name: 'Supply-chain', type: 'Strategic' }, { name: 'Insider', type: 'Strategic' },
+            { name: 'Zero-day', type: 'Strategic' }
+        ];
+
+        function renderThreats(filterType) {
+            const grid = document.getElementById('threat-grid');
+            grid.innerHTML = '';
+            
+            threats.forEach(t => {
+                if(filterType === 'All' || t.type === filterType) {
+                    let typeColor = 'bg-slate-100 text-slate-600';
+                    if(t.type === 'Malware') typeColor = 'bg-red-100 text-red-800';
+                    if(t.type === 'Network') typeColor = 'bg-blue-100 text-blue-800';
+                    if(t.type === 'Social') typeColor = 'bg-purple-100 text-purple-800';
+                    if(t.type === 'App') typeColor = 'bg-amber-100 text-amber-800';
+                    if(t.type === 'Strategic') typeColor = 'bg-slate-800 text-white';
+
+                    grid.innerHTML += `
+                        <div class="border border-slate-200 rounded p-3 text-center flex flex-col justify-center min-h-[80px] bg-white fade-in">
+                            <span class="font-bold text-sm text-slate-800 mb-1">${t.name}</span>
+                            <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full inline-block mx-auto ${typeColor}">${t.type}</span>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function filterThreats(type) {
+            // Update button styles
+            const btns = document.getElementById('threat-filters').children;
+            for(let btn of btns) {
+                btn.className = "px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors";
+                if(btn.innerText.includes(type) || (type==='Social' && btn.innerText.includes('Social'))) {
+                    btn.className = "px-4 py-2 rounded-full text-sm font-medium bg-slate-800 text-white transition-colors";
+                }
+            }
+            renderThreats(type);
+        }
+
+        // --- Risk Assessment Logic ---
+        function calculateRisk() {
+            const l = parseInt(document.getElementById('slider-l').value);
+            const i = parseInt(document.getElementById('slider-i').value);
+            const score = l * i;
+            
+            document.getElementById('val-l').innerText = l;
+            document.getElementById('val-i').innerText = i;
+            
+            const scoreEl = document.getElementById('risk-score');
+            const labelEl = document.getElementById('risk-label');
+            
+            scoreEl.innerText = score;
+
+            // Determine color and label based on standard 5x5 matrix
+            if(score >= 15) {
+                scoreEl.className = "text-5xl font-black text-red-600 transition-colors duration-300";
+                labelEl.className = "mt-2 text-sm font-bold text-red-700";
+                labelEl.innerText = "Critical Risk (Immediate Action)";
+            } else if (score >= 8) {
+                scoreEl.className = "text-5xl font-black text-amber-500 transition-colors duration-300";
+                labelEl.className = "mt-2 text-sm font-bold text-amber-700";
+                labelEl.innerText = "Medium Risk (Plan Mitigation)";
+            } else {
+                scoreEl.className = "text-5xl font-black text-emerald-500 transition-colors duration-300";
+                labelEl.className = "mt-2 text-sm font-bold text-emerald-700";
+                labelEl.innerText = "Low Risk (Accept / Monitor)";
+            }
+        }
+
+        // Init
+        renderThreats('All');
+        calculateRisk();
+        
+        // Wait for fonts/layout to settle before first chart init
+        setTimeout(() => {
+            initChart();
+        }, 100);
+
+    </script>
+</body>
+</html>
+
+
+

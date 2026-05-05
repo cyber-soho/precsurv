@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 01 — Cybersecurity Fundamentals Interactive Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; } 
+        @media (min-width: 768px) { .chart-container { height: 350px; } }
+        .tab-active { border-bottom-width: 4px; border-color: #3b82f6; color: #1e3a8a; font-weight: 600; }
+        .tab-inactive { border-bottom-width: 4px; border-color: transparent; color: #64748b; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+<!-- Chosen Palette: Slate Gray, Royal Blue, Emerald Green -->
+<!-- Application Structure Plan: The SPA uses a dashboard/workbook layout divided into two main exercise panels to guide the student through Lab 0. Exercise 1 is transformed from a static writing prompt into an interactive incident logger that builds a dynamic dataset, which is then visualized via a Chart.js radar chart. Exercise 2 is converted into a dynamic tabbed interface revealing specific interactive checklists based on the chosen topology platform. This structure promotes active learning, tracking, and immediate visual feedback. -->
+<!-- Visualization & Content Choices: Exercise 1 -> Goal: Analyze & Compare -> Method: Form inputs & dynamic list -> Interaction: User logs incidents -> Justification: Active data entry over passive reading. Chart.js Radar Chart -> Goal: Summarize -> Interaction: Updates automatically -> Justification: Visually shows which pillars of the CIA triad are most frequently attacked in the student's dataset. Exercise 2 -> Goal: Organize & Track -> Method: Tabbed navigation & interactive checklists -> Interaction: User selects path and checks off steps -> Justification: Reduces cognitive load by hiding irrelevant instructions. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <header class="mb-8 border-b border-slate-300 pb-6">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+            <div>
+                <p class="text-sm font-semibold text-blue-600 tracking-wider uppercase mb-1">Course Procedure Manual — Lab 0</p>
+                <h1 class="text-3xl font-bold text-slate-900">Day 01 — Cybersecurity Fundamentals</h1>
+            </div>
+            <div class="bg-white p-3 rounded-lg shadow-sm border border-slate-200 min-w-[200px]">
+                <p class="text-xs text-slate-500 font-semibold mb-1 uppercase tracking-wide">Lab Completion</p>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 mb-1">
+                    <div id="progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p id="progress-text" class="text-right text-sm font-medium text-emerald-600">0%</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
+            <div class="bg-blue-50 border-b border-slate-200 p-5">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <span class="bg-blue-600 text-white text-sm py-1 px-2 rounded">Part A</span>
+                    CIA Triad in the Wild
+                </h2>
+                <p class="text-sm text-slate-600 mt-2">
+                    This section requires you to log three major cybersecurity incidents from the last 24 months. By actively inputting the compromised triad pillars, threat actors, and attack vectors, you will build a dataset that updates the visual analysis chart below. This helps map theoretical concepts to real-world impact.
+                </p>
+            </div>
+            <div class="p-5 flex-grow">
+                <form id="incident-form" class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                    <h3 class="text-sm font-bold text-slate-700 uppercase mb-3">Log an Incident (<span id="incident-count">0</span>/3)</h3>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Incident Name / Target</label>
+                        <input type="text" id="inc-name" required class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Change Healthcare">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Compromised Pillar(s)</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-1 text-sm"><input type="checkbox" id="chk-c" value="C"> Confidentiality</label>
+                            <label class="flex items-center gap-1 text-sm"><input type="checkbox" id="chk-i" value="I"> Integrity</label>
+                            <label class="flex items-center gap-1 text-sm"><input type="checkbox" id="chk-a" value="A"> Availability</label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Threat Actor</label>
+                            <select id="inc-actor" class="w-full border border-slate-300 rounded p-2 text-sm">
+                                <option value="APT">APT (Nation-State)</option>
+                                <option value="Cybercriminals">Cybercriminals</option>
+                                <option value="Hacktivists">Hacktivists</option>
+                                <option value="Insider">Insider Threat</option>
+                                <option value="Unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Primary Vector</label>
+                            <input type="text" id="inc-vector" required class="w-full border border-slate-300 rounded p-2 text-sm" placeholder="e.g., Phishing, Zero-Day">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-medium py-2 px-4 rounded transition-colors">Add to Lab Log</button>
+                </form>
+
+                <div id="logged-incidents" class="space-y-3">
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 border-t border-slate-200 p-5 mt-auto">
+                <h3 class="text-sm font-bold text-slate-700 uppercase mb-4 text-center">CIA Compromise Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="ciaChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col h-full">
+            <div class="bg-emerald-50 border-b border-slate-200 p-5">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <span class="bg-emerald-600 text-white text-sm py-1 px-2 rounded">Part B</span>
+                    Baseline Topology Build
+                </h2>
+                <p class="text-sm text-slate-600 mt-2">
+                    This section guides you through provisioning your lab environment. Choose ONE platform below. The interface will adapt to show only the instructions relevant to your choice. Use the interactive checklist to ensure all components (Firewall + Internal + External machines) are properly configured before finalizing your topology.
+                </p>
+            </div>
+            
+            <div class="p-0 border-b border-slate-200 flex flex-wrap bg-slate-50" id="topology-tabs">
+                <button data-target="aws" class="flex-1 py-3 px-4 text-sm tab-active transition-colors hover:bg-slate-100">Option A: AWS Educate</button>
+                <button data-target="vbox" class="flex-1 py-3 px-4 text-sm tab-inactive transition-colors hover:bg-slate-100">Option B: VirtualBox</button>
+                <button data-target="gns3" class="flex-1 py-3 px-4 text-sm tab-inactive transition-colors hover:bg-slate-100">Option C: GNS3</button>
+            </div>
+
+            <div class="p-6 flex-grow">
+                <div id="content-aws" class="topology-content block">
+                    <h3 class="font-bold text-lg text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">AWS Cloud Topology Requirements</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-blue-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Provision a new Virtual Private Cloud (VPC) with public and private subnets.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-blue-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Set up an EC2 instance acting as the internal server.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-blue-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Configure Security Groups to simulate firewall rules.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="content-vbox" class="topology-content hidden">
+                    <h3 class="font-bold text-lg text-slate-800 mb-4 border-l-4 border-orange-500 pl-3">VirtualBox Local Topology Requirements</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-orange-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Download required ISOs: Kali Linux (Attacker) and Ubuntu Server (Internal).</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-orange-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Configure a pfSense/Router VM with dual interfaces.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-orange-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Create and assign an internal NAT Network for LAN connectivity.</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="content-gns3" class="topology-content hidden">
+                    <h3 class="font-bold text-lg text-slate-800 mb-4 border-l-4 border-purple-500 pl-3">GNS3 Advanced Topology Requirements</h3>
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-purple-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Deploy GNS3 VM and connect local client.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-purple-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Import and configure a pfSense appliance node.</span>
+                        </label>
+                        <label class="flex items-start gap-3 p-3 bg-slate-50 rounded border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="checkbox" class="mt-1 w-4 h-4 text-purple-600 rounded topo-checkbox" onchange="updateProgress()">
+                            <span class="text-sm text-slate-700">Connect a VPCS (Virtual PC Simulator) to the LAN interface and assign IPs.</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border-t border-slate-200 p-5 mt-auto">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-slate-800">Final Deliverable Check</p>
+                        <p class="text-xs text-slate-500">Ensure screenshots and IP configs are saved.</p>
+                    </div>
+                    <button id="btn-export" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-6 rounded shadow-sm transition-colors opacity-50 cursor-not-allowed">Export to GitHub</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
+
+<script>
+    const state = {
+        incidents: [],
+        maxIncidents: 3,
+        ciaCounts: { C: 0, I: 0, A: 0 }
+    };
+
+    const ctx = document.getElementById('ciaChart').getContext('2d');
+    const ciaChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Confidentiality', 'Integrity', 'Availability'],
+            datasets: [{
+                label: 'Pillars Compromised',
+                data: [0, 0, 0],
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(0, 0, 0, 0.1)' },
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                    pointLabels: { font: { size: 12, family: 'Inter' }, color: '#475569' },
+                    ticks: { display: false, min: 0, max: 3, stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { family: 'Inter' }, bodyFont: { family: 'Inter' } }
+            }
+        }
+    });
+
+    document.getElementById('incident-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if(state.incidents.length >= state.maxIncidents) return;
+
+        const name = document.getElementById('inc-name').value;
+        const actor = document.getElementById('inc-actor').value;
+        const vector = document.getElementById('inc-vector').value;
+        
+        const c = document.getElementById('chk-c').checked;
+        const i = document.getElementById('chk-i').checked;
+        const a = document.getElementById('chk-a').checked;
+
+        let pillars = [];
+        if(c) { pillars.push('C'); state.ciaCounts.C++; }
+        if(i) { pillars.push('I'); state.ciaCounts.I++; }
+        if(a) { pillars.push('A'); state.ciaCounts.A++; }
+
+        const incident = { name, actor, vector, pillars };
+        state.incidents.push(incident);
+
+        renderIncidents();
+        updateChart();
+        updateProgress();
+        this.reset();
+        
+        if(state.incidents.length >= state.maxIncidents) {
+            this.querySelector('button').disabled = true;
+            this.querySelector('button').classList.add('opacity-50', 'cursor-not-allowed');
+            this.querySelector('button').innerText = 'All Incidents Logged';
+        }
+    });
+
+    function renderIncidents() {
+        const container = document.getElementById('logged-incidents');
+        document.getElementById('incident-count').innerText = state.incidents.length;
+        container.innerHTML = '';
+
+        state.incidents.forEach((inc, idx) => {
+            const el = document.createElement('div');
+            el.className = 'p-3 bg-white border border-slate-200 rounded shadow-sm text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2';
+            el.innerHTML = `
+                <div>
+                    <span class="font-bold text-slate-800">${idx + 1}. ${inc.name}</span>
+                    <span class="text-xs text-slate-500 ml-2">${inc.actor} via ${inc.vector}</span>
+                </div>
+                <div class="flex gap-1">
+                    ${['C', 'I', 'A'].map(p => 
+                        `<span class="px-2 py-0.5 text-xs font-bold rounded ${inc.pillars.includes(p) ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-slate-100 text-slate-300'}">${p}</span>`
+                    ).join('')}
+                </div>
+            `;
+            container.appendChild(el);
+        });
+    }
+
+    function updateChart() {
+        ciaChart.data.datasets[0].data = [state.ciaCounts.C, state.ciaCounts.I, state.ciaCounts.A];
+        ciaChart.options.scales.r.ticks.max = Math.max(3, ...[state.ciaCounts.C, state.ciaCounts.I, state.ciaCounts.A]);
+        ciaChart.update();
+    }
+
+    const tabs = document.querySelectorAll('#topology-tabs button');
+    const contents = document.querySelectorAll('.topology-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => { t.classList.remove('tab-active'); t.classList.add('tab-inactive'); });
+            contents.forEach(c => c.classList.add('hidden'));
+
+            tab.classList.add('tab-active');
+            tab.classList.remove('tab-inactive');
+            document.getElementById('content-' + tab.dataset.target).classList.remove('hidden');
+            
+            document.querySelectorAll('.topo-checkbox').forEach(cb => cb.checked = false);
+            updateProgress();
+        });
+    });
+
+    function updateProgress() {
+        const incPct = (state.incidents.length / state.maxIncidents) * 50;
+        
+        const activeContent = document.querySelector('.topology-content:not(.hidden)');
+        const checkboxes = activeContent.querySelectorAll('.topo-checkbox');
+        let checkedCount = 0;
+        checkboxes.forEach(cb => { if(cb.checked) checkedCount++; });
+        const topoPct = checkboxes.length > 0 ? (checkedCount / checkboxes.length) * 50 : 0;
+
+        const totalPct = Math.round(incPct + topoPct);
+        
+        document.getElementById('progress-bar').style.width = totalPct + '%';
+        document.getElementById('progress-text').innerText = totalPct + '%';
+
+        const exportBtn = document.getElementById('btn-export');
+        if(totalPct === 100) {
+            exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            exportBtn.onclick = () => alert('Mock Action: Markdown files generated and pushed to GitHub repository!');
+        } else {
+            exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            exportBtn.onclick = null;
+        }
+    }
+</script>
+</body>
+</html>
+
+
+

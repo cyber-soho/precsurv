@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 01: Cybersecurity Fundamentals</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        /* Tabs Styling */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background-color: #e0e0e0;
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .tab-button:hover {
+            background-color: #ccc;
+        }
+
+        .tab-button.active {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Flashcards Styling */
+        .flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .flashcard {
+            background-color: transparent;
+            height: 220px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+        }
+
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .flashcard-front {
+            background-color: #fff;
+            color: #2c3e50;
+            border: 2px solid #2c3e50;
+            font-weight: bold;
+        }
+
+        .flashcard-back {
+            background-color: #2c3e50;
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        /* Quiz Styling */
+        .question-block {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-block:last-child {
+            border-bottom: none;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            padding: 10px;
+            border-left: 4px solid #f39c12;
+        }
+
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .options li {
+            margin-bottom: 12px;
+        }
+
+        .options label {
+            cursor: pointer;
+            display: block;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .options label:hover {
+            background: #f0f0f0;
+        }
+
+        button.check-answer-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        button.check-answer-btn:hover {
+            background-color: #2ecc71;
+        }
+
+        .feedback {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Cybersecurity Fundamentals Study Guide</h1>
+
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab('flashcards', this)">Flashcards</button>
+        <button class="tab-button" onclick="openTab('quiz', this)">Practice Quiz</button>
+    </div>
+
+    <div id="flashcards" class="tab-content active">
+        <h2>Flashcards (25 Concepts)</h2>
+        <p><em>Click on a card to flip it and reveal the answer.</em></p>
+        <div class="flashcard-grid" id="flashcard-container">
+            </div>
+    </div>
+
+    <div id="quiz" class="tab-content">
+        <h2>Practice Quiz (10 Questions)</h2>
+        <div id="quiz-container">
+            </div>
+    </div>
+
+</div>
+
+<script>
+    // Tab switching logic
+    function openTab(tabId, element) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        element.classList.add('active');
+    }
+
+    // Flashcard flipping logic
+    function flipCard(element) {
+        element.classList.toggle('flipped');
+    }
+
+    // Quiz checking logic
+    function checkAnswer(btn) {
+        const block = btn.closest('.question-block');
+        const selected = block.querySelector('input[type="radio"]:checked');
+        const feedback = block.querySelector('.feedback');
+
+        if (!selected) {
+            alert('Please select an answer first.');
+            return;
+        }
+
+        const isCorrect = selected.dataset.correct === 'true';
+        const rationale = selected.dataset.rationale;
+
+        if (isCorrect) {
+            feedback.className = 'feedback correct';
+            feedback.innerHTML = '<strong>Correct!</strong> ' + rationale;
+        } else {
+            feedback.className = 'feedback incorrect';
+            feedback.innerHTML = '<strong>Incorrect.</strong> ' + rationale;
+        }
+    }
+
+    // Data for Flashcards
+    const flashcardsData = [
+        { front: "Core principle of Confidentiality", back: "Only authorized eyes are allowed to see the data." },
+        { front: "Primary tools for Confidentiality", back: "Encryption, Access Control Lists (ACLs), Role-Based Access Control (RBAC), Multi-Factor Authentication (MFA), and least privilege." },
+        { front: "Core principle of Integrity", back: "Data read equals data written, meaning the data has not been altered or tampered with." },
+        { front: "Primary tools for Integrity", back: "Hashes (SHA-256, SHA-3), digital signatures, and File Integrity Monitoring (FIM)." },
+        { front: "Core principle of Availability", back: "Systems and data are reachable and accessible when needed." },
+        { front: "Primary tools for Availability", back: "Redundancy, failover systems, DDoS protection, and tested backups." },
+        { front: "Principle of Least Privilege", back: "Start with a default deny, then add only the minimum necessary access required for a user or system to function." },
+        { front: "The cheapest, highest-impact security control", back: "The principle of least privilege, as most breaches trace back to a violation of it." },
+        { front: "Primary CIA leg(s) targeted by Ransomware", back: "Availability (and Confidentiality, in cases of double extortion)." },
+        { front: "Primary CIA leg(s) targeted by SQL Injection (SQLi)", back: "Confidentiality and Integrity." },
+        { front: "Primary CIA leg(s) targeted by Man-in-the-Middle (MITM) attacks", back: "Confidentiality and Integrity." },
+        { front: "Standard defense against Phishing", back: "Multi-Factor Authentication (MFA), user training, and email gateways." },
+        { front: "Security vs. Performance trade-off", back: "The goal is balance; a perfectly secure system is unplugged and useless, while a perfectly fast system is unprotected." },
+        { front: "Characteristics of Symmetric Cryptography", back: "Uses one key, is fast, and is used for bulk data encryption (e.g., AES-128/256, ChaCha20)." },
+        { front: "Characteristics of Asymmetric Cryptography", back: "Uses a key pair (public and private), is slow, and is used for key exchange and digital signatures (e.g., RSA-2048+, ECDSA)." },
+        { front: "Characteristics of Cryptographic Hashes", back: "One-way mathematical functions used for checking data integrity (e.g., SHA-256, BLAKE3)." },
+        { front: "Deprecated cryptographic hashes to avoid", back: "MD5 and SHA-1." },
+        { front: "Proper method for password hashing", back: "Use a purposefully slow Key Derivation Function (KDF) like bcrypt, scrypt, or Argon2id, and always use a salt." },
+        { front: "The six core functions of the NIST CSF 2.0 framework", back: "Govern, Identify, Protect, Detect, Respond, and Recover." },
+        { front: "Best framework for establishing a certifiable Information Security Management System (ISMS)", back: "ISO/IEC 27001." },
+        { front: "Best framework for US-regulated environments needing a comprehensive list of controls", back: "NIST SP 800-53." },
+        { front: "Best framework for hardening a specific Operating System", back: "CIS Benchmarks." },
+        { front: "Best framework for an organization looking to 'just start somewhere'", back: "CIS Critical Controls (specifically the 18 prioritized controls)." },
+        { front: "Formula for calculating Risk", back: "Risk = Likelihood × Impact" },
+        { front: "Standard defense against a Supply-chain attack", back: "Software Bill of Materials (SBOM), code-signing, and robust vendor risk management." }
+    ];
+
+    // Data for Quiz
+    const quizData = [
+        {
+            question: "A system administrator needs to ensure that database records haven't been tampered with during transit across the network. Which tool should they implement to guarantee this specific requirement?",
+            hint: "Think about the tool used to verify data read equals data written.",
+            options: [
+                { text: "AES-256 Encryption", rationale: "Encryption protects confidentiality by making data unreadable, but it doesn't necessarily prove whether the underlying data was altered without being read.", correct: false },
+                { text: "Role-Based Access Control", rationale: "RBAC limits who can access the system, but it doesn't mathematically prove that data in transit hasn't changed.", correct: false },
+                { text: "SHA-256 Hashes", rationale: "Hashes provide a unique digital fingerprint used to verify data integrity and ensure it hasn't been altered.", correct: true },
+                { text: "Multi-Factor Authentication", rationale: "MFA verifies user identity, which falls under confidentiality and access control, not data integrity.", correct: false }
+            ]
+        },
+        {
+            question: "A new intern needs to view network logs to create weekly reports. The IT manager gives them full administrator access to the logging server to ensure they don't run into permission issues. Which principle is directly violated?",
+            hint: "Consider the rule of starting with a default deny and adding only the minimum necessary access.",
+            options: [
+                { text: "Availability", rationale: "The server is still reachable and functioning, so availability is not the primary principle being violated.", correct: false },
+                { text: "Least Privilege", rationale: "Giving full admin access to someone who only needs to view logs gives them more power than necessary, violating the principle of adding minimum access.", correct: true },
+                { text: "Integrity", rationale: "While the intern could potentially alter logs now, the immediate and direct violation is the over-provisioning of access rights.", correct: false },
+                { text: "Defense in Depth", rationale: "While related to overall security architecture, this scenario describes a specific failure to restrict permissions to the bare minimum.", correct: false }
+            ]
+        },
+        {
+            question: "An e-commerce business estimates they will lose $100,000 for every hour their site is down. They require a Service Level Agreement (SLA) that guarantees no more than one hour of downtime per year. Which availability tier must they engineer for?",
+            hint: "Recall the tier that restricts downtime to approximately 52 minutes annually.",
+            options: [
+                { text: "Basic (99%)", rationale: "This tier allows for over 3 days of downtime, which is far too much for this business requirement.", correct: false },
+                { text: "Standard (99.9%)", rationale: "This tier allows for 8 hours and 45 minutes of downtime, exceeding the one-hour maximum limit.", correct: false },
+                { text: "High (99.99%)", rationale: "This tier restricts downtime to 52 minutes per year, satisfying the strict requirement of under one hour.", correct: true },
+                { text: "Critical (99.999%)", rationale: "While this would meet the requirement (5.3 minutes), engineering for 5 nines when 4 nines is sufficient would incur unnecessary costs without a clear business need.", correct: false }
+            ]
+        },
+        {
+            question: "Your organization's web application is experiencing an overwhelming flood of junk traffic, preventing legitimate users from accessing their accounts. Which defense mechanism should you prioritize to mitigate this specific threat?",
+            hint: "Identify the threat as a volumetric attack and consider what controls protect the 'Availability' leg of the triad.",
+            options: [
+                { text: "Implement parameterized queries", rationale: "This defends against SQL injection, which targets confidentiality and integrity, not availability.", correct: false },
+                { text: "Enforce Multi-Factor Authentication", rationale: "MFA prevents unauthorized account access but does nothing to stop a flood of network traffic.", correct: false },
+                { text: "Require offline tested backups", rationale: "Backups are crucial for ransomware recovery, but they won't stop an ongoing traffic flood from knocking a site offline.", correct: false },
+                { text: "Deploy Anycast and rate-limiting", rationale: "Anycast networks and rate-limiting absorb and filter volumetric DDoS traffic, effectively restoring the availability of the service.", correct: true }
+            ]
+        },
+        {
+            question: "A developer is designing a secure file transfer protocol. They need to encrypt gigabytes of video files quickly before sending them over the network. Which cryptographic approach is best suited for encrypting this bulk data?",
+            hint: "Remember the difference in speed and use cases between keys that come in pairs versus single shared keys.",
+            options: [
+                { text: "RSA-2048", rationale: "RSA is an asymmetric algorithm, which is mathematically intense and far too slow for bulk data encryption.", correct: false },
+                { text: "AES-256", rationale: "AES is a symmetric encryption algorithm, which is highly efficient and designed for encrypting large amounts of bulk data quickly.", correct: true },
+                { text: "SHA-3", rationale: "SHA-3 is a one-way hashing algorithm used for integrity checks, not for encrypting and decrypting data.", correct: false },
+                { text: "ECDSA", rationale: "ECDSA is an asymmetric algorithm primarily used for digital signatures, not for encrypting large files.", correct: false }
+            ]
+        },
+        {
+            question: "You are auditing a company's custom-built authentication system and notice they are storing user passwords by running them through a plain SHA-256 function. Why is this considered a critical vulnerability?",
+            hint: "Consider the speed at which modern hardware can process certain algorithms and the need to slow down brute-force attempts.",
+            options: [
+                { text: "SHA-256 is susceptible to SQL injection attacks.", rationale: "Hashing algorithms have nothing to do with preventing SQL injection.", correct: false },
+                { text: "SHA-256 is an asymmetric algorithm that requires a public key to verify.", rationale: "SHA-256 is a one-way hash function, not an asymmetric encryption algorithm.", correct: false },
+                { text: "The hash output is too short to provide adequate entropy.", rationale: "SHA-256 provides a 256-bit output, which is plenty of entropy; the issue is the computation speed, not the output length.", correct: false },
+                { text: "The algorithm is too fast, allowing attackers to rapidly brute-force passwords.", rationale: "Plain SHA-256 is designed for speed, meaning modern GPUs can calculate billions of hashes per second, making offline brute-forcing of passwords trivial.", correct: true }
+            ]
+        },
+        {
+            question: "The board of directors wants a high-level overview of the company's cybersecurity posture, specifically categorized into how the company identifies, protects against, and responds to threats. Which framework should the CISO use to frame this conversation?",
+            hint: "Look for the framework specifically designed for executive-level conversations using a six-function lifecycle.",
+            options: [
+                { text: "CIS Benchmarks", rationale: "These are highly technical, OS-specific hardening guides, entirely inappropriate for a high-level board presentation.", correct: false },
+                { text: "ISO/IEC 27001", rationale: "While useful for showing certification, it's focused on establishing an ISMS rather than providing a simple conversational framework.", correct: false },
+                { text: "NIST CSF 2.0", rationale: "The Cybersecurity Framework uses a high-level, six-function model (Govern, Identify, Protect, Detect, Respond, Recover) ideal for communicating risk to executives.", correct: true },
+                { text: "NIST SP 800-53", rationale: "This is a massive catalog of over 1,000 granular controls, which would overwhelm a board of directors.", correct: false }
+            ]
+        },
+        {
+            question: "A hospital stores patient databases containing highly sensitive health records. They assess the impact of a breach as Critical (5) and the likelihood of a ransomware attack as High (4). Using the standard formula, what is the calculated risk score, and how should it be prioritized?",
+            hint: "Apply the formula Risk = Likelihood × Impact.",
+            options: [
+                { text: "Risk score of 9; low priority to monitor.", rationale: "The correct calculation is multiplication, not addition.", correct: false },
+                { text: "Risk score of 1.25; accept the risk.", rationale: "The calculation is a product, not a division of the factors.", correct: false },
+                { text: "Risk score of 10; implement a Web Application Firewall.", rationale: "The math is incorrect, and a WAF is a defense against app-layer attacks, not ransomware.", correct: false },
+                { text: "Risk score of 20; fund mitigations like offline backups immediately.", rationale: "Likelihood (4) multiplied by Impact (5) equals a high risk score of 20, making it a top priority for funding controls.", correct: true }
+            ]
+        },
+        {
+            question: "An employee receives an urgent email appearing to be from the CEO, demanding they immediately wire funds to a new vendor to close a critical business deal. What specific type of threat is this?",
+            hint: "This is a social engineering attack that specifically impersonates a high-level executive or uses business context to steal money.",
+            options: [
+                { text: "Spear Phishing", rationale: "While it is targeted, BEC is the more specific and accurate term for financial fraud impersonating executives to authorize wire transfers.", correct: false },
+                { text: "Whaling", rationale: "Whaling targets the executive themselves to steal their credentials, whereas this targets an employee impersonating the executive.", correct: false },
+                { text: "Cross-Site Scripting (XSS)", rationale: "XSS is an application-layer attack involving malicious scripts injected into web pages, unrelated to deceptive emails.", correct: false },
+                { text: "Business Email Compromise (BEC)", rationale: "BEC is a specific type of social engineering where an attacker compromises or spoofs corporate email accounts to facilitate fraudulent wire transfers.", correct: true }
+            ]
+        },
+        {
+            question: "An engineer proposes implementing military-grade encryption, rigorous biometric authentication, and deep packet inspection on a public-facing blog meant to load in under 1 second. Why might the Lead Architect reject this proposal?",
+            hint: "Recall the principle regarding the cost and balance of security controls.",
+            options: [
+                { text: "The controls violate the principle of least privilege.", rationale: "These controls don't necessarily give excess permissions; they are just excessively heavy.", correct: false },
+                { text: "These tools are primarily used to ensure data availability, not confidentiality.", rationale: "Encryption and biometrics actually protect confidentiality and integrity, not availability.", correct: false },
+                { text: "The proposed controls will severely degrade performance without a matching business need.", rationale: "Every control costs CPU, disk, and latency; a public blog does not warrant the performance hit of such heavy, restrictive controls. The goal is balance.", correct: true },
+                { text: "The combination of these tools creates a vulnerability to supply-chain attacks.", rationale: "Adding security controls doesn't inherently create a supply-chain vulnerability unless the vendors are compromised.", correct: false }
+            ]
+        }
+    ];
+
+    // Inject Flashcards
+    const flashcardContainer = document.getElementById('flashcard-container');
+    flashcardsData.forEach(card => {
+        const cardHTML = `
+            <div class="flashcard" onclick="flipCard(this)">
+                <div class="flashcard-inner">
+                    <div class="flashcard-front">
+                        <p>${card.front}</p>
+                    </div>
+                    <div class="flashcard-back">
+                        <p>${card.back}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        flashcardContainer.innerHTML += cardHTML;
+    });
+
+    // Inject Quiz
+    const quizContainer = document.getElementById('quiz-container');
+    quizData.forEach((q, index) => {
+        let optionsHTML = '';
+        q.options.forEach((opt, optIndex) => {
+            // Escape quotes in rationale so it doesn't break HTML attributes
+            const cleanRationale = opt.rationale.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+            optionsHTML += `
+                <li>
+                    <label>
+                        <input type="radio" name="q${index}" data-correct="${opt.correct}" data-rationale="${cleanRationale}">
+                        ${opt.text}
+                    </label>
+                </li>
+            `;
+        });
+
+        const questionHTML = `
+            <div class="question-block">
+                <div class="question-text">${index + 1}. ${q.question}</div>
+                <div class="hint">Hint: ${q.hint}</div>
+                <ul class="options">
+                    ${optionsHTML}
+                </ul>
+                <button class="check-answer-btn" onclick="checkAnswer(this)">Check Answer</button>
+                <div class="feedback"></div>
+            </div>
+        `;
+        quizContainer.innerHTML += questionHTML;
+    });
+</script>
+
+</body>
+</html>
+
+
+
+
