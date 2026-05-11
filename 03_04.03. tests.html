@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Study Hub: Topologies & Architecture</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            300: '#d6d3d1',
+                            700: '#44403c',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        accent: {
+                            light: '#0284c7',
+                            dark: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #fafaf9; color: #1c1917; }
+        
+        /* Tab Styles */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Flashcard Flip Animation */
+        .flip-card {
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.75rem;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #e7e5e4;
+        }
+        .flip-card-front {
+            background-color: #ffffff;
+            color: #1c1917;
+        }
+        .flip-card-back {
+            background-color: #f5f5f4;
+            color: #0369a1;
+            transform: rotateY(180deg);
+            border: 2px solid #0369a1;
+        }
+
+        /* Quiz Styles */
+        .quiz-option { transition: all 0.2s; cursor: pointer; }
+        .quiz-option.disabled { cursor: not-allowed; opacity: 0.7; }
+        .quiz-option.correct { background-color: #dcfce7; border-color: #22c55e; color: #166534; }
+        .quiz-option.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; }
+        .rationale { display: none; }
+        .rationale.visible { display: block; animation: fadeIn 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col">
+
+    <header class="bg-stone-900 text-stone-50 py-6 shadow-md">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <h1 class="text-2xl font-bold tracking-tight">&#x1F4DA; Cyber.SoHo Study Hub</h1>
+            <p class="text-stone-400 text-sm font-mono">Module: Topologies & Architecture</p>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-6 py-8">
+        
+        <nav class="flex space-x-2 border-b border-stone-200 mb-8" aria-label="Tabs">
+            <button class="tab-btn px-6 py-3 font-semibold text-accent-dark border-b-2 border-accent-dark transition-all focus:outline-none" data-target="flashcards-tab">
+                &#x1F3B4; Flashcards (25)
+            </button>
+            <button class="tab-btn px-6 py-3 font-medium text-stone-500 hover:text-stone-800 transition-all focus:outline-none" data-target="quiz-tab">
+                &#x270D; Practice Quiz (10)
+            </button>
+        </nav>
+
+        <div id="flashcards-tab" class="tab-content active">
+            <div class="mb-6 flex justify-between items-center bg-stone-100 p-4 rounded-lg border border-stone-200">
+                <p class="text-stone-600 text-sm">Click on any card to flip it and reveal the answer. Use these to memorize key definitions and threat surfaces.</p>
+                <button id="flip-all-btn" class="px-4 py-2 bg-white border border-stone-300 text-stone-700 rounded text-sm hover:bg-stone-50 transition-colors font-medium">Flip All</button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="flashcard-grid">
+                </div>
+        </div>
+
+        <div id="quiz-tab" class="tab-content">
+            <div class="mb-6 bg-stone-100 p-4 rounded-lg border border-stone-200">
+                <p class="text-stone-600 text-sm">Test your practical application of network topology and defensible architecture concepts. Select an answer to see the detailed rationale.</p>
+            </div>
+
+            <div class="space-y-10" id="quiz-container">
+                </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-stone-100 border-t border-stone-200 py-6 mt-12 text-center text-stone-500 text-sm">
+        <p>&copy; 2026 Cyber.SoHo Study Tools</p>
+    </footer>
+
+    <script>
+        // --- DATA STRUCTURES ---
+
+        const flashcardsData = [
+            { front: "PAN (Personal Area Network) threat surface", back: "Pairing and BLE (Bluetooth Low Energy) sniffing." },
+            { front: "LAN (Local Area Network) threat surface", back: "ARP poisoning, rogue DHCP, and lateral movement." },
+            { front: "WAN (Wide Area Network) threat surface", back: "Transit compromise and tunnel mis-keys." },
+            { front: "VPN (Virtual Private Network) threat surface", back: "The trust model after entry." },
+            { front: "Status of VLAN as a network type", back: "It is not a network type, but rather a segmentation construct inside a LAN." },
+            { front: "Bus topology failure mode", back: "One cable cut brings everything down, and every host sniffs the traffic." },
+            { front: "Star topology failure mode", back: "If the centre dies, the entire office dies." },
+            { front: "Ring topology failure mode", back: "One node down breaks the ring, unless it is a dual ring." },
+            { front: "Primary advantage of a Mesh topology", back: "It survives almost any single failure." },
+            { front: "Median lateral-movement time from compromise to crown jewels", back: "Minutes, not days." },
+            { front: "Three segmentation primitives", back: "Subnetting, VLAN, and Microsegmentation." },
+            { front: "Layer 1 of Defense in Depth", back: "Policies & Awareness (Humans)." },
+            { front: "Layer 7 of Defense in Depth", back: "Data (Encryption at rest, Data Loss Prevention)." },
+            { front: "Core motto of Zero Trust Architecture", back: "Never trust, always verify." },
+            { front: "Three load-bearing components of Zero Trust", back: "PDP (Policy Decision Point), PEP (Policy Enforcement Point), and Signals." },
+            { front: "The three maps of every real network", back: "Physical, Logical, and Trust maps." },
+            { front: "Requirements for a valid Risk Register finding", back: "It must include a Remediation and an Owner (otherwise it is just a complaint or a wish)." },
+            { front: "Five essential elements of a good network diagram", back: "Title block, Legend, Addressing, Trust zones, and Scope note." },
+            { front: "The most important and least common network diagram type", back: "The trust diagram (security map)." },
+            { front: "Purpose of the scope note in a network diagram", back: "To specify what is not on the diagram, preventing readers from assuming it is completely comprehensive." },
+            { front: "First check in the 10-second triage of a network diagram", back: "Where is the Internet?" },
+            { front: "Two most-forgotten persistent footholds in an office network", back: "The cleaner (unsupervised physical access) and the printer." },
+            { front: "Definition of a bad adjacency", back: "Two devices on the same subnet that are tagged with different trust zones." },
+            { front: "Trust-Boundary Score Formula", back: "100 - 10 * (bad adjacencies), with a floor of 0." },
+            { front: "Top two Architectural Smells to look out for", back: "One big subnet, and printers on every VLAN." }
+        ];
+
+        const quizData = [
+            {
+                question: "A company sets up a dedicated network segment exclusively for block-level storage connecting to its database clusters. If this specific network is compromised, what is the primary threat surface?",
+                options: [
+                    { text: "Compromise equates to direct access to the physical disks.", rationale: "A Storage Area Network (SAN) provides dedicated block-level storage, meaning a breach at this level grants direct access to the underlying storage media.", correct: true },
+                    { text: "ARP poisoning and rogue DHCP servers.", rationale: "These are characteristic threats for a Local Area Network (LAN), where broadcast traffic can be readily manipulated.", correct: false },
+                    { text: "Pairing interception and BLE sniffing.", rationale: "These are the primary threat vectors for a Personal Area Network (PAN), operating over very short distances.", correct: false },
+                    { text: "Transit compromise across multiple cities.", rationale: "This describes the threat surface of a Wide Area Network (WAN), relying on external carrier infrastructure.", correct: false }
+                ]
+            },
+            {
+                question: "In evaluating network resilience, an architect notices that if the central switch fails, the entire connected office loses connectivity. Which topology's failure mode is the architect observing?",
+                options: [
+                    { text: "Bus", rationale: "A Bus topology fails completely if any single part of the main backbone cable is cut, but it doesn't rely on a central switch.", correct: false },
+                    { text: "Star", rationale: "In a Star topology, all nodes connect to a central point; if that center dies, the entire network it supports goes down.", correct: true },
+                    { text: "Ring", rationale: "A Ring topology's failure mode involves a broken ring when one node goes down.", correct: false },
+                    { text: "Mesh", rationale: "A Mesh topology is designed for high redundancy and survives almost any single hardware failure.", correct: false }
+                ]
+            },
+            {
+                question: "An organization maintains a flat /24 network structure without internal access control lists. According to incident response reports, how long does the median lateral movement typically take for an attacker after an initial compromise?",
+                options: [
+                    { text: "Days", rationale: "This timeline was more common in older manual attacks, but automated lateral movement is drastically faster.", correct: false },
+                    { text: "Weeks", rationale: "This timeline typically describes the dwell time before an attack is noticed, not the speed of lateral movement itself.", correct: false },
+                    { text: "Hours", rationale: "While significant damage can occur in this timeframe, modern operators move much faster once inside a flat network.", correct: false },
+                    { text: "Minutes", rationale: "Without internal segmentation to slow them down, attackers can move laterally to access crown jewels in a fraction of an hour.", correct: true }
+                ]
+            },
+            {
+                question: "An auditor is reviewing a company's application of the seven layers of Defense in Depth. They find robust Web Application Firewalls (WAF) and strong input validation, but notice a complete lack of Data Loss Prevention (DLP) and encryption at rest. Which layer is missing its primary control?",
+                options: [
+                    { text: "Layer 7 — Data", rationale: "This layer represents the innermost core of defense, relying on controls like encryption at rest and DLP to protect the actual information.", correct: true },
+                    { text: "Layer 6 — Application", rationale: "The presence of a WAF and input validation indicates that this layer is already well-defended.", correct: false },
+                    { text: "Layer 5 — Host", rationale: "This layer involves endpoint controls like EDR, AV, and patching.", correct: false },
+                    { text: "Layer 3 — Perimeter", rationale: "This layer is defended by Next-Generation Firewalls (NGFW) and IPS, sitting at the network boundary.", correct: false }
+                ]
+            },
+            {
+                question: "Under the NIST SP 800-207 Zero Trust framework, which component acts as 'the gate' that actively allows or drops traffic based on continuous evaluation?",
+                options: [
+                    { text: "Policy Decision Point (PDP)", rationale: "This acts as the brain evaluating trust and generating the rules, but it does not execute the actual blocking of traffic.", correct: false },
+                    { text: "Policy Enforcement Point (PEP)", rationale: "This component is the actual gatekeeper that physically or logically drops or forwards packets based on instructions from the PDP.", correct: true },
+                    { text: "Signals", rationale: "These provide the context, such as identity and device posture, which are fed into the decision engine.", correct: false },
+                    { text: "Defense in Depth", rationale: "This is a broader security philosophy about stacking layered controls, not a specific Zero Trust component.", correct: false }
+                ]
+            },
+            {
+                question: "During a network diagram review, the lead architect insists on adding a 'scope note' to the document. What specific risk does this element mitigate?",
+                options: [
+                    { text: "It maps out the IP addressing and subnet masks for all perimeter gateways.", rationale: "This function is handled by the 'Addressing' element of a diagram.", correct: false },
+                    { text: "It prevents readers from assuming the diagram is completely comprehensive by detailing what is explicitly omitted.", rationale: "Without stating what is excluded, viewers naturally assume the drawn map represents the entire infrastructure, leading to dangerous blind spots.", correct: true },
+                    { text: "It defines the visual symbols, line styles, and colors used throughout the map.", rationale: "This defines the purpose of a diagram's 'Legend'.", correct: false },
+                    { text: "It details the version, date, and author of the current document.", rationale: "This administrative metadata belongs in the diagram's 'Title block'.", correct: false }
+                ]
+            },
+            {
+                question: "An incident response team needs to determine exactly what systems a compromised workstation is allowed to reach. Which of the three core network maps should they consult?",
+                options: [
+                    { text: "The Physical Map", rationale: "This map shows hardware connections and answers what stops working if a physical cable is cut.", correct: false },
+                    { text: "The Trust Map", rationale: "Also known as the security map, this diagram explicitly visualizes trust zones, boundaries, and what access is permitted between segments.", correct: true },
+                    { text: "The Logical Map", rationale: "While it shows the path a packet will take, it doesn't primarily focus on the policy boundaries and trust relationships.", correct: false },
+                    { text: "The Addressing Map", rationale: "Addressing is an element of a diagram, not one of the three primary structural maps.", correct: false }
+                ]
+            },
+            {
+                question: "When performing a 'thirty-second deep look' at an office network diagram, an auditor should immediately look for two specific elements that represent highly common, persistent footholds. What are they?",
+                options: [
+                    { text: "The boundary firewall and the DMZ.", rationale: "These are part of the initial 'ten-second triage' to understand basic perimeter hygiene.", correct: false },
+                    { text: "Admin interfaces and guest wireless access points.", rationale: "While important items on a checklist, they are not the specific twin footholds highlighted for the 30-second review.", correct: false },
+                    { text: "The cleaner's access and the printers.", rationale: "Printers are often ignored network devices with vulnerabilities, and cleaners have unsupervised physical access to live jacks, making them prime targets.", correct: true },
+                    { text: "Domain controllers and backup storage arrays.", rationale: "These are highly valuable targets (crown jewels), but they are usually heavily defended.", correct: false }
+                ]
+            },
+            {
+                question: "An analyst submits a Risk Register finding for an 'admin interface on a user VLAN' and assigns it a 'High' severity. According to the Lab criteria, what must be added for this to be considered a complete finding rather than just a 'complaint'?",
+                options: [
+                    { text: "A CVSS score and an Impact analysis.", rationale: "While CVSS bands are useful, the core philosophy is that a finding needs actionable ownership and steps.", correct: false },
+                    { text: "A physical map reference and a logical path.", rationale: "Adding map references doesn't transform a complaint into an actionable business task.", correct: false },
+                    { text: "An estimated budget and a project timeline.", rationale: "While eventual project management requires these, the base requirement for a valid Risk Register entry is simpler.", correct: false },
+                    { text: "A Remediation and an Owner.", rationale: "A security finding is unactionable without a proposed fix (remediation) and a specific team or person responsible for executing it (owner).", correct: true }
+                ]
+            },
+            {
+                question: "A security consultant calculates a network's Trust-Boundary Score using the formula: 100 - 10 * (bad adjacencies). They find exactly 3 instances where devices on the same subnet are tagged with different trust zones. What is the final score?",
+                options: [
+                    { text: "30", rationale: "This represents the total penalty applied, not the final score derived by subtracting the penalty from 100.", correct: false },
+                    { text: "97", rationale: "This would be the result if each bad adjacency only carried a penalty of 1 point.", correct: false },
+                    { text: "70", rationale: "Starting at 100, subtracting 10 for each of the 3 bad adjacencies results in a penalty of 30, leaving a final score of 70.", correct: true },
+                    { text: "85", rationale: "This score does not align with the mathematical outcome of the provided formula.", correct: false }
+                ]
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Tab Switching Logic
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Reset buttons
+                    tabBtns.forEach(b => {
+                        b.classList.remove('text-accent-dark', 'border-b-2', 'border-accent-dark');
+                        b.classList.add('text-stone-500');
+                    });
+                    
+                    // Activate clicked button
+                    btn.classList.remove('text-stone-500');
+                    btn.classList.add('text-accent-dark', 'border-b-2', 'border-accent-dark');
+
+                    // Switch content
+                    const targetId = btn.getAttribute('data-target');
+                    tabContents.forEach(tc => {
+                        tc.classList.remove('active');
+                        if (tc.id === targetId) tc.classList.add('active');
+                    });
+                });
+            });
+
+            // 2. Render Flashcards
+            const flashcardGrid = document.getElementById('flashcard-grid');
+            flashcardsData.forEach((card, index) => {
+                const cardHTML = `
+                    <div class="h-48 flip-card" id="card-${index}">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front shadow-sm">
+                                <span class="font-semibold text-lg leading-snug">${card.front}</span>
+                            </div>
+                            <div class="flip-card-back shadow-sm">
+                                <span class="font-medium text-base leading-relaxed">${card.back}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                flashcardGrid.insertAdjacentHTML('beforeend', cardHTML);
+            });
+
+            // Flashcard click to flip
+            document.querySelectorAll('.flip-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('flipped');
+                });
+            });
+
+            // Flip all button
+            const flipAllBtn = document.getElementById('flip-all-btn');
+            let allFlipped = false;
+            flipAllBtn.addEventListener('click', () => {
+                allFlipped = !allFlipped;
+                document.querySelectorAll('.flip-card').forEach(card => {
+                    if (allFlipped) {
+                        card.classList.add('flipped');
+                    } else {
+                        card.classList.remove('flipped');
+                    }
+                });
+                flipAllBtn.textContent = allFlipped ? "Unflip All" : "Flip All";
+            });
+
+            // 3. Render Quiz
+            const quizContainer = document.getElementById('quiz-container');
+            quizData.forEach((q, qIndex) => {
+                
+                // Shuffle options for this question
+                const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+
+                let optionsHTML = '';
+                shuffledOptions.forEach((opt, oIndex) => {
+                    optionsHTML += `
+                        <div class="quiz-option p-4 border border-stone-300 rounded-lg bg-white hover:bg-stone-50" 
+                             data-qindex="${qIndex}" 
+                             data-correct="${opt.correct}" 
+                             data-rationale="${opt.rationale.replace(/"/g, '&quot;')}">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mt-0.5 mr-3">
+                                    <div class="w-5 h-5 rounded-full border-2 border-stone-300 flex items-center justify-center option-circle"></div>
+                                </div>
+                                <span class="text-stone-800 font-medium">${opt.text}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                const questionHTML = `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200" id="question-block-${qIndex}">
+                        <h3 class="text-lg font-bold text-stone-900 mb-4"><span class="text-accent-dark mr-2">Q${qIndex + 1}.</span> ${q.question}</h3>
+                        <div class="space-y-3">
+                            ${optionsHTML}
+                        </div>
+                        <div class="rationale mt-4 p-4 rounded-lg text-sm" id="rationale-${qIndex}">
+                            </div>
+                    </div>
+                `;
+                quizContainer.insertAdjacentHTML('beforeend', questionHTML);
+            });
+
+            // Quiz interaction logic
+            document.querySelectorAll('.quiz-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const qIndex = this.getAttribute('data-qindex');
+                    const isCorrect = this.getAttribute('data-correct') === 'true';
+                    const rationaleText = this.getAttribute('data-rationale');
+                    
+                    const questionBlock = document.getElementById(`question-block-${qIndex}`);
+                    const allOptions = questionBlock.querySelectorAll('.quiz-option');
+                    const rationaleDiv = document.getElementById(`rationale-${qIndex}`);
+
+                    // If already answered, do nothing
+                    if (rationaleDiv.classList.contains('visible')) return;
+
+                    // Disable all options and show correct/incorrect states
+                    allOptions.forEach(opt => {
+                        opt.classList.add('disabled');
+                        const optIsCorrect = opt.getAttribute('data-correct') === 'true';
+                        
+                        // Show the selected option's color, or reveal the correct one
+                        if (opt === this) {
+                            if (isCorrect) {
+                                opt.classList.add('correct');
+                                opt.querySelector('.option-circle').innerHTML = '<span class="text-green-600 text-xs">&#10003;</span>';
+                                opt.querySelector('.option-circle').classList.add('border-green-500', 'bg-green-100');
+                            } else {
+                                opt.classList.add('incorrect');
+                                opt.querySelector('.option-circle').innerHTML = '<span class="text-red-600 text-xs">&#10007;</span>';
+                                opt.querySelector('.option-circle').classList.add('border-red-500', 'bg-red-100');
+                            }
+                        } else if (optIsCorrect) {
+                            // Highlight correct answer if they got it wrong
+                            opt.classList.add('correct');
+                            opt.classList.remove('hover:bg-stone-50');
+                            opt.querySelector('.option-circle').classList.add('border-green-500');
+                        }
+                    });
+
+                    // Show rationale
+                    rationaleDiv.classList.add('visible');
+                    if (isCorrect) {
+                        rationaleDiv.classList.add('bg-green-50', 'text-green-900', 'border', 'border-green-200');
+                        rationaleDiv.innerHTML = `<strong>&#10003; Correct!</strong> ${rationaleText}`;
+                    } else {
+                        rationaleDiv.classList.add('bg-amber-50', 'text-amber-900', 'border', 'border-amber-200');
+                        rationaleDiv.innerHTML = `<strong>&#10007; Incorrect.</strong> ${rationaleText}`;
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+

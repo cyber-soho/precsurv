@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 02 — Network Architecture Mapping & Vulnerability Identification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Neutrals (Stone, Sand, Ivory) with Deep Teal Accents -->
+    <!-- Application Structure Plan: The application uses a single-page dashboard structure. Instead of a linear document, content is organized into logical, task-oriented phases (Overview, Setup & Mapping, Vulnerability Analysis, Validation, Deliverables). This chunking prevents cognitive overload. A sticky navigation sidebar allows quick jumping between phases. Interactive elements like tabs (for map types), filterable lists (for tools), and a dynamic chart (for grading) transform static instructions into an explorable workspace, emphasizing the actionable nature of the lab. -->
+    <!-- Visualization & Content Choices: 
+        1. Lab Overview -> Goal: Inform -> Interactive Stat Cards -> Justification: Quick access to critical meta-data (due date, weight). 
+        2. Network Topology -> Goal: Organize -> HTML/CSS Grid Diagram -> Justification: Visualizes the required setup without using prohibited SVGs.
+        3. Map Types (Physical/Logical/Trust) -> Goal: Compare/Organize -> JS Tabs -> Justification: Saves space and allows direct comparison of requirements for each map type.
+        4. Tool Options -> Goal: Organize -> JS Filterable List -> Justification: Helps students find alternative tools quickly based on category.
+        5. Marking Guide -> Goal: Inform/Proportions -> Chart.js Doughnut Chart -> Justification: Visually communicates where students should focus their effort (e.g., Human Findings is highly weighted). Library: Chart.js (Canvas). 
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f5f5f4; color: #1c1917; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
+        }
+        .nav-link.active {
+            background-color: #115e59;
+            color: white;
+            font-weight: 600;
+        }
+        .tab-btn.active-tab {
+            border-bottom: 2px solid #115e59;
+            color: #115e59;
+            font-weight: 600;
+        }
+        .tool-btn.active-filter {
+            background-color: #115e59;
+            color: white;
+        }
+        html { scroll-behavior: smooth; }
+        .cyber-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .cyber-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="antialiased selection:bg-teal-200 selection:text-teal-900">
+
+    <nav class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <img src="cyber_soho.png" alt="Cyber.SoHo Logo" class="h-10 w-auto mr-3">
+                    <span class="font-bold text-xl text-stone-800 tracking-tight">CYB-01 Dashboard</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">Overview</a>
+                    <a href="#setup" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">Phase 1: Setup & Map</a>
+                    <a href="#vuln" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">Phase 2: Vulnerability</a>
+                    <a href="#scripts" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">Phase 3: Validation</a>
+                    <a href="#deliverables" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">Deliverables</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
+        
+        <main class="w-full space-y-12">
+
+            <section id="overview" class="scroll-mt-24">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-8 cyber-card">
+                    <h1 class="text-3xl font-bold text-stone-900 mb-2">Lab 02 — Network Architecture Mapping & Vulnerability Identification</h1>
+                    <p class="text-stone-500 font-medium mb-6">Course: 420-D01-AB — Cybersecurity Fundamentals | Cohort: CYB-01</p>
+                    
+                    <p class="text-stone-700 leading-relaxed mb-6">
+                        Welcome to your Lab 02 command center. This application organizes all requirements for your Network Architecture lab into an interactive workflow. The goal of this lab is to move beyond the vocabulary of cyber risk and start drawing the actual map. By navigating through these sections, you will build an environment, create physical, logical, and trust maps, and perform vulnerability assessments resulting in a comprehensive Risk Register.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 flex items-center gap-4">
+                            <div class="text-3xl">⏱️</div>
+                            <div>
+                                <h3 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Deadline</h3>
+                                <p class="text-stone-600 text-sm">Sun, 24 May 2026, 23:59 EST</p>
+                            </div>
+                        </div>
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 flex items-center gap-4">
+                            <div class="text-3xl">📄</div>
+                            <div>
+                                <h3 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Format</h3>
+                                <p class="text-stone-600 text-sm">PDF/A (Max 10 A4 pages)</p>
+                            </div>
+                        </div>
+                        <div class="bg-stone-50 p-4 rounded-lg border border-stone-100 flex items-center gap-4">
+                            <div class="text-3xl">⚠️</div>
+                            <div>
+                                <h3 class="text-sm font-bold text-stone-900 uppercase tracking-wider">Late Penalty</h3>
+                                <p class="text-red-600 text-sm font-semibold">-10% per calendar day</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="setup" class="scroll-mt-24">
+                <h2 class="text-2xl font-bold text-stone-900 mb-4 flex items-center gap-2"><span class="text-teal-700">Phase 1</span> Setup & Mapping</h2>
+                <p class="text-stone-700 mb-6 bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
+                    This section covers Parts A and B of the lab. Your objective here is to build a functional virtual network and then accurately document it from three different perspectives. Understanding the difference between physical connections, logical routing, and security boundaries is crucial for a defensible architecture.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 cyber-card">
+                        <h3 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-2">Target Topology Requirements</h3>
+                        
+                        <div class="bg-stone-800 rounded-lg p-6 flex flex-col items-center justify-center space-y-6 text-white mb-6">
+                            <div class="bg-stone-700 px-6 py-2 rounded-full border border-stone-500 font-mono text-sm shadow-inner">
+                                Router (Any Vendor/Virtual)
+                            </div>
+                            
+                            <div class="flex w-full justify-center gap-12 relative">
+                                <div class="absolute w-px h-6 bg-stone-500 -top-6 left-1/4"></div>
+                                <div class="absolute w-px h-6 bg-stone-500 -top-6 right-1/4"></div>
+                                <div class="absolute w-1/2 h-px bg-stone-500 -top-6"></div>
+
+                                <div class="flex flex-col items-center w-1/2">
+                                    <div class="bg-stone-600 px-4 py-2 rounded border border-stone-400 font-mono text-xs w-full text-center mb-4">
+                                        Switch A (Users)<br><span class="text-teal-300">10.20.10.0/24</span>
+                                    </div>
+                                    <div class="w-px h-4 bg-stone-500"></div>
+                                    <div class="bg-stone-700 p-2 rounded border border-stone-500 text-xs w-full text-center">
+                                        💻 WIN-WS01 (Win 10/11)
+                                    </div>
+                                </div>
+                                
+                                <div class="flex flex-col items-center w-1/2">
+                                    <div class="bg-stone-600 px-4 py-2 rounded border border-stone-400 font-mono text-xs w-full text-center mb-4">
+                                        Switch B (Servers)<br><span class="text-teal-300">10.20.20.0/24</span>
+                                    </div>
+                                    <div class="flex w-full justify-between gap-2">
+                                        <div class="flex flex-col items-center w-1/2">
+                                            <div class="w-px h-4 bg-stone-500"></div>
+                                            <div class="bg-stone-700 p-2 rounded border border-stone-500 text-xs w-full text-center">
+                                                🖥️ LIN-SRV01
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col items-center w-1/2">
+                                            <div class="w-px h-4 bg-stone-500"></div>
+                                            <div class="bg-stone-700 p-2 rounded border border-stone-500 text-xs w-full text-center">
+                                                🕵️ LIN-ANALYST
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-md text-sm">
+                            <strong>Required Screenshots:</strong> <code>ip route</code> (Linux), <code>route print</code> (Windows), <code>show ip route</code> (Router). Annotate IPs.
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 cyber-card">
+                        <h3 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-2">The Three Maps</h3>
+                        
+                        <div class="flex space-x-2 border-b border-stone-200 mb-4">
+                            <button class="tab-btn active-tab px-4 py-2 text-sm font-medium transition-colors" data-target="tab-physical">Physical</button>
+                            <button class="tab-btn px-4 py-2 text-sm font-medium text-stone-500 transition-colors" data-target="tab-logical">Logical</button>
+                            <button class="tab-btn px-4 py-2 text-sm font-medium text-stone-500 transition-colors" data-target="tab-trust">Trust</button>
+                        </div>
+
+                        <div id="tab-physical" class="tab-content text-sm text-stone-700 space-y-3">
+                            <p class="font-semibold text-stone-900">What is physically connected to what?</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Device names</li>
+                                <li>Interface names (eth0, Gi0/1, vmnic2)</li>
+                                <li>Cable types / virtual links</li>
+                                <li>Switch port numbers</li>
+                            </ul>
+                        </div>
+
+                        <div id="tab-logical" class="tab-content hidden text-sm text-stone-700 space-y-3">
+                            <p class="font-semibold text-stone-900">What speaks to what at Layer 3?</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Subnets and their masks</li>
+                                <li>Default gateway for each subnet</li>
+                                <li>Inter-subnet routes (static or dynamic)</li>
+                                <li>Any NAT boundary</li>
+                            </ul>
+                        </div>
+
+                        <div id="tab-trust" class="tab-content hidden text-sm text-stone-700 space-y-3">
+                            <p class="font-semibold text-stone-900">What is allowed to talk to what at Layer 4+? (The Security Map)</p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>Allowed protocols/ports between subnets/hosts</li>
+                                <li>Authentication boundaries (SSO, MFA)</li>
+                                <li>Data-classification labels (public/internal/confidential)</li>
+                            </ul>
+                            <p class="italic text-xs text-stone-500 mt-2">Most networks lack classification labels. Yours must have them.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="vuln" class="scroll-mt-24">
+                <h2 class="text-2xl font-bold text-stone-900 mb-4 flex items-center gap-2"><span class="text-teal-700">Phase 2</span> Vulnerability Analysis</h2>
+                <p class="text-stone-700 mb-6 bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
+                    This section represents Part C. Armed with your three maps, you will systematically evaluate your architecture against standard defensibility principles. Findings from this checklist must be translated into actionable entries in your Architectural Risk Register.
+                </p>
+
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden mb-6 cyber-card">
+                    <div class="px-6 py-4 border-b border-stone-200 bg-stone-50">
+                        <h3 class="text-lg font-bold text-stone-900">Defensible Architecture Checklist</h3>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-stone-100 text-stone-600">
+                                <tr>
+                                    <th class="px-6 py-3 font-semibold w-12">#</th>
+                                    <th class="px-6 py-3 font-semibold">Question to Answer</th>
+                                    <th class="px-6 py-3 font-semibold w-32">Triggers Risk?</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-stone-200 text-stone-800">
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">1</td>
+                                    <td class="px-6 py-3">What type of network is this? / What topology is it actually? (Q1-2)</td>
+                                    <td class="px-6 py-3"><span class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-xs font-semibold">If ambiguous</span></td>
+                                </tr>
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">3</td>
+                                    <td class="px-6 py-3">How many broadcast domains?</td>
+                                    <td class="px-6 py-3"><span class="bg-stone-200 text-stone-700 px-2 py-1 rounded text-xs font-semibold">If flat</span></td>
+                                </tr>
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">4</td>
+                                    <td class="px-6 py-3">Where is the user ↔ server boundary?</td>
+                                    <td class="px-6 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">If missing</span></td>
+                                </tr>
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">6</td>
+                                    <td class="px-6 py-3">Is administrative access on its own segment?</td>
+                                    <td class="px-6 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">If NO</span></td>
+                                </tr>
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">8</td>
+                                    <td class="px-6 py-3">Single point of failure — physical, logical, human?</td>
+                                    <td class="px-6 py-3"><span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-semibold">If found</span></td>
+                                </tr>
+                                <tr class="hover:bg-stone-50">
+                                    <td class="px-6 py-3 text-stone-500 font-mono">10</td>
+                                    <td class="px-6 py-3">Are any Zero Trust signals actually collected and acted on?</td>
+                                    <td class="px-6 py-3"><span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">If NO</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-teal-900 text-teal-50 rounded-xl p-6 shadow-md">
+                    <h3 class="text-lg font-bold text-white mb-2">The Risk Register Formula</h3>
+                    <p class="text-teal-200 text-sm mb-4">Every "No" or "I don't know" in the checklist above becomes a row here. Require ≥ 10 rows for final submission.</p>
+                    <div class="bg-teal-950 p-4 rounded-lg font-mono text-xs overflow-x-auto text-teal-100 border border-teal-800">
+                        ID: AR-001 | Finding: No admin segmentation | Where: 10.20.10.0 | Sev: High (7.5) | Remediation: Create VLAN 99 | Effort: M | Owner: NetEng
+                    </div>
+                </div>
+            </section>
+
+            <section id="scripts" class="scroll-mt-24">
+                <h2 class="text-2xl font-bold text-stone-900 mb-4 flex items-center gap-2"><span class="text-teal-700">Phase 3</span> Scripts & Validation</h2>
+                <p class="text-stone-700 mb-6 bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
+                    Covering Parts E and G, this section shifts focus to the NorthernEdge Analytics Inc. case study. You will run automated scripts to extract architectural insights, and then perform a critical human validation step to uncover discrepancies between documentation and reality.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 cyber-card border-l-4 border-l-stone-600">
+                        <div class="text-2xl mb-2">🤖</div>
+                        <h3 class="font-bold text-stone-900">E.1 - E.4: Automated Scripts</h3>
+                        <ul class="mt-3 space-y-2 text-sm text-stone-600">
+                            <li><span class="font-mono bg-stone-100 px-1 rounded text-stone-800">completeness_check.py</span> &rarr; JSON output</li>
+                            <li><span class="font-mono bg-stone-100 px-1 rounded text-stone-800">three_views_generator.py</span> &rarr; 3 PNG views</li>
+                            <li><span class="font-mono bg-stone-100 px-1 rounded text-stone-800">trust_boundary_score.ps1</span> &rarr; KPI Score</li>
+                            <li><span class="font-mono bg-stone-100 px-1 rounded text-stone-800">smell_scanner.sh</span> &rarr; Markdown table</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 cyber-card border-l-4 border-l-teal-600">
+                        <div class="text-2xl mb-2">👁️</div>
+                        <h3 class="font-bold text-stone-900">Part G: The Validation Task</h3>
+                        <p class="mt-3 text-sm text-stone-600 mb-3">Compare the provided SVG diagram against the YAML and CSV files. <strong class="text-stone-900">Expect lies.</strong></p>
+                        <ul class="list-disc pl-5 text-sm text-stone-600 space-y-1">
+                            <li>Is every device in CSV on diagram?</li>
+                            <li>Do subnets/zones match across sources?</li>
+                            <li>Find at least 4 deliberate divergences.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-red-200 shadow-sm">
+                    <h3 class="text-lg font-bold text-red-800 mb-2">Critical: Three Human-Only Findings</h3>
+                    <p class="text-sm text-stone-700 mb-4">This determines if you understood the core concepts. Identify 3 architectural risks that scripts cannot find.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-stone-50 p-3 rounded border border-stone-200">
+                            <strong>Example:</strong> Physical access assumptions contradicting network trust zones (e.g., cleaner access).
+                        </div>
+                        <div class="bg-stone-50 p-3 rounded border border-stone-200">
+                            <strong>Example:</strong> Organisational dependencies, like diagrams reliant on departed staff.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="deliverables" class="scroll-mt-24">
+                <h2 class="text-2xl font-bold text-stone-900 mb-4 flex items-center gap-2"><span class="text-teal-700">Final</span> Deliverables & Grading</h2>
+                <p class="text-stone-700 mb-6 bg-white p-4 rounded-lg border border-stone-200 shadow-sm">
+                    This section outlines exactly what must be in your final 10-page PDF report and visualizes the marking rubric. Pay close attention to the point distribution to prioritize your time effectively.
+                </p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+                        <h3 class="font-bold text-stone-900 mb-4 border-b border-stone-100 pb-2">Final Report Scaffold</h3>
+                        <ol class="list-decimal pl-5 space-y-2 text-sm text-stone-700">
+                            <li>Cover page & Executive Summary</li>
+                            <li>The three maps (Physical, Logical, Trust)</li>
+                            <li>Defensible Architecture Checklist</li>
+                            <li>Architectural Risk Register (≥ 10 rows)</li>
+                            <li>Completeness JSON block</li>
+                            <li>Three derived view PNGs + interpretations</li>
+                            <li>Trust-Boundary Score + interpretation</li>
+                            <li>Smell scan markdown table</li>
+                            <li class="font-bold text-teal-700 bg-teal-50 px-2 py-1 rounded inline-block mt-1">THREE HUMAN-ONLY FINDINGS</li>
+                            <li>Reflection</li>
+                            <li>Appendices (Screenshots, command outputs, source codes)</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6 flex flex-col items-center">
+                        <h3 class="font-bold text-stone-900 mb-2 border-b border-stone-100 w-full text-left pb-2">Marking Guide (100 pts)</h3>
+                        <div class="chart-container w-full">
+                            <canvas id="rubricChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-8">
+                <h3 class="text-lg font-bold text-stone-900 mb-4">Open-Source Tooling Alternatives</h3>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="tool-btn active-filter px-3 py-1 rounded-full border border-stone-300 text-sm font-medium transition-colors" data-filter="all">All</button>
+                    <button class="tool-btn px-3 py-1 bg-white rounded-full border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors" data-filter="diagram">Diagramming</button>
+                    <button class="tool-btn px-3 py-1 bg-white rounded-full border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors" data-filter="sim">Simulation</button>
+                    <button class="tool-btn px-3 py-1 bg-white rounded-full border border-stone-300 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors" data-filter="discovery">Discovery/Inventory</button>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="tools-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer snippet injected here -->
+    <footer class="bg-stone-900 text-stone-400 py-6 mt-8">
+        <div class="container mx-auto text-center text-sm">
+            <p style="display:flex; justify-content:center; align-items:center; gap:8px; margin:0;">
+                <img src="cyber_soho.png"
+                     alt="Cyber Soho"
+                     style="height:50px;">
+                <span>Educational Hub &copy; 2026 | From the Industry to the Classroom — Building the IT’s Future, Today and Together !
+                <br>ALL Rights Reserved</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section[id]');
+            
+            const updateActiveNav = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            window.addEventListener('scroll', updateActiveNav);
+            updateActiveNav();
+
+            
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => {
+                        b.classList.remove('active-tab');
+                        b.classList.add('text-stone-500');
+                    });
+                    tabContents.forEach(c => c.classList.add('hidden'));
+
+                    btn.classList.add('active-tab');
+                    btn.classList.remove('text-stone-500');
+                    const target = btn.getAttribute('data-target');
+                    document.getElementById(target).classList.remove('hidden');
+                });
+            });
+
+            
+            const toolsData = [
+                { name: "draw.io", cat: "diagram" },
+                { name: "yEd", cat: "diagram" },
+                { name: "Excalidraw", cat: "diagram" },
+                { name: "Diagrams (code)", cat: "diagram" },
+                { name: "GNS3", cat: "sim" },
+                { name: "EVE-NG", cat: "sim" },
+                { name: "Packet Tracer", cat: "sim" },
+                { name: "Containerlab", cat: "sim" },
+                { name: "Nmap", cat: "discovery" },
+                { name: "Masscan", cat: "discovery" },
+                { name: "NetBox", cat: "discovery" },
+                { name: "phpIPAM", cat: "discovery" }
+            ];
+
+            const toolsGrid = document.getElementById('tools-grid');
+            
+            const renderTools = (filter) => {
+                toolsGrid.innerHTML = '';
+                toolsData.forEach(tool => {
+                    if (filter === 'all' || tool.cat === filter) {
+                        const el = document.createElement('div');
+                        el.className = 'bg-white p-3 rounded-lg border border-stone-200 text-center text-sm font-medium text-stone-700 cyber-card';
+                        el.textContent = tool.name;
+                        toolsGrid.appendChild(el);
+                    }
+                });
+            };
+
+            const toolBtns = document.querySelectorAll('.tool-btn');
+            toolBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    toolBtns.forEach(b => {
+                        b.classList.remove('active-filter', 'bg-teal-700', 'text-white');
+                        b.classList.add('bg-white', 'text-stone-600');
+                    });
+                    btn.classList.add('active-filter');
+                    btn.classList.remove('bg-white', 'text-stone-600');
+                    
+                    renderTools(btn.getAttribute('data-filter'));
+                });
+            });
+            renderTools('all');
+
+            
+            const ctx = document.getElementById('rubricChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        'Human Findings',
+                        'Maps (Phy/Log/Trust)',
+                        'Risk Register',
+                        'Script Artefacts',
+                        'Validation Table',
+                        'Setup & Screenshots',
+                        'Checklist',
+                        'Reflection & Polish'
+                    ],
+                    datasets: [{
+                        data: [18, 18, 16, 16, 10, 8, 8, 6],
+                        backgroundColor: [
+                            '#0f766e', 
+                            '#0e7490', 
+                            '#0369a1', 
+                            '#1d4ed8', 
+                            '#4338ca', 
+                            '#a8a29e', 
+                            '#78716c', 
+                            '#d6d3d1'  
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: { family: 'Inter', size: 11 },
+                                color: '#444'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.raw + ' points';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+

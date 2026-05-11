@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Topology & Architecture Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        stone: {
+                            50: '#fafaf9',
+                            100: '#f5f5f4',
+                            200: '#e7e5e4',
+                            300: '#d6d3d1',
+                            700: '#44403c',
+                            800: '#292524',
+                            900: '#1c1917',
+                        },
+                        accent: {
+                            light: '#0284c7',
+                            dark: '#0369a1',
+                            warn: '#d97706'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 50vh;
+            max-height: 500px;
+            min-height: 350px;
+        }
+        
+        body {
+            background-color: #fafaf9;
+            color: #1c1917;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-link.active {
+            background-color: #e7e5e4;
+            border-right: 4px solid #0369a1;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden bg-stone-50 text-stone-800 font-sans">
+
+    <!-- Chosen Palette: Warm Neutrals with Subdued Blue Accents -->
+    <!-- Application Structure Plan: The SPA uses a dashboard layout with a persistent side navigation. This structure was chosen because the course material (canvas.md) covers distinct but interconnected modules (Fundamentals, Security Models, Auditing, and Lab Work). A linear read is less effective than a modular exploration space. Users can jump between learning concepts (Types/Topologies) and applying them (Trust Score Calculator, Auditing). The dashboard facilitates a "reference guide" feel, ideal for students completing Lab 02. -->
+    <!-- Visualization & Content Choices: 
+         1. Network Types/Topologies -> Goal: Inform/Organize -> Viz: Interactive Tabs & Grids -> Justification: Breaks dense tables into digestible, explorable cards.
+         2. 12 Architectural Smells -> Goal: Compare/Impact -> Viz: Chart.js Horizontal Bar Chart -> Justification: Visually demonstrates the prevalence and impact of configuration errors (simulated data based on "great audit" text), making the checklist memorable.
+         3. Trust-Boundary Score -> Goal: Calculate/Change -> Viz: Interactive JS Calculator -> Justification: Transforms a static formula into an interactive tool for the student to use directly during Lab 02.
+         Confirming NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="w-64 bg-stone-100 border-r border-stone-200 flex-shrink-0 hidden md:flex flex-col h-full z-20 shadow-sm">
+        <div class="p-6 border-b border-stone-200">
+            <h1 class="text-xl font-bold tracking-tight text-stone-900">Cyber.SoHo Hub</h1>
+            <p class="text-xs text-stone-500 mt-1 uppercase tracking-wider font-semibold">CYB-01 • Days 03 & 04</p>
+        </div>
+        <div class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li><a href="#overview" class="nav-link active block py-3 px-6 text-sm hover:bg-stone-200 transition-colors" data-target="overview">&#x1F4D6; Course Overview</a></li>
+                <li><a href="#topology" class="nav-link block py-3 px-6 text-sm hover:bg-stone-200 transition-colors" data-target="topology">&#x1F5A7; Types & Topologies</a></li>
+                <li><a href="#security" class="nav-link block py-3 px-6 text-sm hover:bg-stone-200 transition-colors" data-target="security">&#x1F6E1; Defense & Zero Trust</a></li>
+                <li><a href="#auditing" class="nav-link block py-3 px-6 text-sm hover:bg-stone-200 transition-colors" data-target="auditing">&#x1F50D; Auditing & Smells</a></li>
+                <li><a href="#lab" class="nav-link block py-3 px-6 text-sm hover:bg-stone-200 transition-colors" data-target="lab">&#x2692; Lab 02 Workspace</a></li>
+            </ul>
+        </div>
+        <div class="p-4 border-t border-stone-200 text-xs text-stone-400">
+            &copy; 2026 Cyber.SoHo
+        </div>
+    </nav>
+
+    <main class="flex-1 overflow-y-auto h-full scroll-smooth" id="main-container">
+        <div class="max-w-5xl mx-auto px-6 py-12 space-y-24">
+
+            <section id="overview" class="content-section pt-4">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-extrabold text-stone-900 mb-4 tracking-tight">Network Topology & Architecture</h2>
+                    <p class="text-lg text-stone-600 leading-relaxed max-w-3xl">
+                        Welcome to the interactive module for Days 03 and 04 of the Cybersecurity Fundamentals course. This application synthesizes the core concepts of network segmentation, defensible architecture, and vulnerability mapping. Use this dashboard to explore theoretical concepts and actively calculate your Lab 02 metrics.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 border-l-4 border-l-accent-dark">
+                        <div class="text-2xl mb-2">&#x1F5FA;</div>
+                        <h3 class="font-bold text-stone-800 mb-2">The Three Maps</h3>
+                        <p class="text-sm text-stone-600">Every real network has a physical, logical, and trust map. Most networks only ship one. We build all three.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 border-l-4 border-l-accent-warn">
+                        <div class="text-2xl mb-2">&#x23F1;</div>
+                        <h3 class="font-bold text-stone-800 mb-2">Time is Critical</h3>
+                        <p class="text-sm text-stone-600">Median lateral-movement time from compromise to crown jewels is measured in <strong>minutes, not days</strong>.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-100 border-l-4 border-l-stone-800">
+                        <div class="text-2xl mb-2">&#x1F4CB;</div>
+                        <h3 class="font-bold text-stone-800 mb-2">Lab 02 Deliverable</h3>
+                        <p class="text-sm text-stone-600">Produces CPM Ch. 2 + Ch. 3. Due Sunday 24 May 2026. This dashboard contains the tools needed to complete your validation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="topology" class="content-section pt-12 border-t border-stone-200">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-900 mb-4">Network Types & Topologies</h2>
+                    <p class="text-base text-stone-600 leading-relaxed max-w-3xl">
+                        Understanding the fundamental shape and scope of a network is the first step in defending it. This section categorizes networks by their physical reach and their structural layout, explicitly detailing the threat surface and failure modes associated with each configuration. The shape decides who eats first.
+                    </p>
+                </div>
+
+                <div class="mb-6 flex space-x-2 border-b border-stone-200">
+                    <button class="tab-btn px-4 py-2 font-semibold text-accent-dark border-b-2 border-accent-dark transition-all" data-target="tab-types">Network Types</button>
+                    <button class="tab-btn px-4 py-2 font-medium text-stone-500 hover:text-stone-800 transition-all" data-target="tab-topologies">Topologies & Failure</button>
+                </div>
+
+                <div id="tab-types" class="tab-content active">
+                    <div class="bg-stone-100 rounded-lg p-4 mb-4 text-sm font-mono text-stone-700 border border-stone-200">
+                        <strong>Key Takeaway:</strong> VLAN is not a network type. It is a segmentation construct inside a LAN.
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">Body-width</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">PAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                Pairing / BLE sniffing
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">One site</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">LAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                ARP poisoning &middot; rogue DHCP &middot; lateral movement
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">Many sites, one campus</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">CAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                LAN&times;N + propped doors
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">One city</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">MAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                Carrier mis-config &middot; BGP leaks
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">Multi-city</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">WAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                Transit compromise &middot; tunnel mis-key
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">Dedicated block-storage</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">SAN</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                Compromise = disks
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-lg border border-stone-200 hover:shadow-md transition-shadow cursor-crosshair group sm:col-span-2 lg:col-span-3">
+                            <div class="text-xs font-bold text-stone-400 uppercase tracking-wide mb-1">A tunnel, not a place</div>
+                            <h4 class="text-xl font-bold text-stone-800 mb-3">VPN (Virtual Private Network)</h4>
+                            <div class="bg-stone-50 p-3 rounded text-sm text-stone-700 group-hover:bg-red-50 transition-colors">
+                                <span class="font-semibold block mb-1 text-stone-900">Threat Surface:</span>
+                                Trust model after entry
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-topologies" class="tab-content">
+                    <div class="bg-stone-100 rounded-lg p-4 mb-6 text-sm font-mono text-stone-700 border border-stone-200">
+                        <strong>Key Takeaway:</strong> The shape decides the failure mode. The "type" sells the cake; the shape decides who eats first.
+                    </div>
+                    <div class="flex flex-col space-y-3">
+                        <div class="flex items-center p-4 bg-white rounded-lg border border-stone-200">
+                            <div class="w-24 font-bold text-lg text-stone-800">Bus</div>
+                            <div class="flex-1 text-stone-600">One cable cut &rarr; everything down; every host sniffs</div>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg border border-stone-200">
+                            <div class="w-24 font-bold text-lg text-stone-800">Ring</div>
+                            <div class="flex-1 text-stone-600">One node down &rarr; ring broken (unless dual)</div>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg border border-stone-200">
+                            <div class="w-24 font-bold text-lg text-stone-800">Star</div>
+                            <div class="flex-1 text-stone-600">Centre dies &rarr; office dies</div>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg border border-stone-200">
+                            <div class="w-24 font-bold text-lg text-stone-800">Mesh</div>
+                            <div class="flex-1 text-stone-600">Survives almost any single failure</div>
+                        </div>
+                        <div class="flex items-center p-4 bg-white rounded-lg border border-stone-200">
+                            <div class="w-24 font-bold text-lg text-stone-800">Tree</div>
+                            <div class="flex-1 text-stone-600">Hierarchy of stars &mdash; cut high, lose more</div>
+                        </div>
+                        <div class="flex items-center p-4 bg-stone-800 rounded-lg border border-stone-900 text-stone-50">
+                            <div class="w-24 font-bold text-lg">Hybrid</div>
+                            <div class="flex-1 text-stone-300">The honest label for any real network</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="security" class="content-section pt-12 border-t border-stone-200">
+                 <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-900 mb-4">Defense in Depth vs. Zero Trust</h2>
+                    <p class="text-base text-stone-600 leading-relaxed max-w-3xl">
+                        Modern defensible architecture relies on stacking controls and removing implicit trust. Here, we juxtapose the traditional 7 layers of Defense in Depth with the modern NIST SP 800-207 Zero Trust paradigm. Interact with the layers below to understand where specific controls live, and how Zero Trust re-arranges the internal perimeter.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-stone-800 mb-4 flex items-center">
+                            <span class="inline-block w-6 text-center mr-2">&#x1F3F0;</span> Defense in Depth
+                        </h3>
+                        <p class="text-sm text-stone-500 mb-4">Every control fails. Stack them so the next one catches what the previous one missed.</p>
+                        
+                        <div class="space-y-2 relative" id="did-layers">
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="Encryption at rest &middot; DLP">
+                                <div class="w-8 font-bold text-stone-400">7</div>
+                                <div class="font-semibold text-stone-800 w-32">Data</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">Encryption at rest &middot; DLP</div>
+                            </div>
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="WAF &middot; input validation">
+                                <div class="w-8 font-bold text-stone-400">6</div>
+                                <div class="font-semibold text-stone-800 w-32">Application</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">WAF &middot; input validation</div>
+                            </div>
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="EDR &middot; patching &middot; AV">
+                                <div class="w-8 font-bold text-stone-400">5</div>
+                                <div class="font-semibold text-stone-800 w-32">Host</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">EDR &middot; patching &middot; AV</div>
+                            </div>
+                            <div class="did-layer bg-white border-l-4 border-l-accent-warn hover:bg-stone-50 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="VLANs &middot; NAC &middot; 802.1X">
+                                <div class="w-8 font-bold text-accent-warn">4</div>
+                                <div class="font-semibold text-stone-800 w-32">Internal Network</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">VLANs &middot; NAC &middot; 802.1X</div>
+                            </div>
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="NGFW &middot; IPS">
+                                <div class="w-8 font-bold text-stone-400">3</div>
+                                <div class="font-semibold text-stone-800 w-32">Perimeter</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">NGFW &middot; IPS</div>
+                            </div>
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="Locks &middot; cameras">
+                                <div class="w-8 font-bold text-stone-400">2</div>
+                                <div class="font-semibold text-stone-800 w-32">Physical</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">Locks &middot; cameras</div>
+                            </div>
+                            <div class="did-layer bg-stone-100 hover:bg-stone-200 p-3 rounded cursor-pointer border border-stone-200 transition-colors flex" data-content="Humans">
+                                <div class="w-8 font-bold text-stone-400">1</div>
+                                <div class="font-semibold text-stone-800 w-32">Policies &amp; Aware</div>
+                                <div class="text-stone-600 text-sm flex-1 target-desc opacity-0 transition-opacity">Humans</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-stone-800 rounded-xl p-6 text-stone-100 shadow-lg">
+                        <h3 class="text-xl font-bold text-white mb-2 flex items-center">
+                            <span class="inline-block w-6 text-center mr-2">&#x1F512;</span> Zero Trust Architecture
+                        </h3>
+                        <p class="text-sm text-stone-400 mb-6 font-mono border-b border-stone-700 pb-4">"Never trust, always verify." (NIST SP 800-207)</p>
+                        
+                        <div class="space-y-4 mb-6">
+                            <div class="flex items-start">
+                                <div class="bg-accent-dark text-white text-xs font-bold px-2 py-1 rounded mr-3 mt-1">1</div>
+                                <div>
+                                    <h4 class="font-bold text-white">PDP (Policy Decision Point)</h4>
+                                    <p class="text-sm text-stone-300">The brain evaluating trust constantly.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-accent-dark text-white text-xs font-bold px-2 py-1 rounded mr-3 mt-1">2</div>
+                                <div>
+                                    <h4 class="font-bold text-white">PEP (Policy Enforcement Point)</h4>
+                                    <p class="text-sm text-stone-300">The gate allowing or dropping traffic based on PDP.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="bg-accent-dark text-white text-xs font-bold px-2 py-1 rounded mr-3 mt-1">3</div>
+                                <div>
+                                    <h4 class="font-bold text-white">Signals</h4>
+                                    <p class="text-sm text-stone-300">Identity &middot; device posture &middot; context.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-stone-900 p-4 rounded border border-stone-700">
+                            <h4 class="text-xs uppercase tracking-wider text-stone-500 mb-2 font-bold">What it practically means</h4>
+                            <ul class="text-sm space-y-2">
+                                <li class="flex items-center"><span class="text-red-400 mr-2">&#x2716;</span> Inside-LAN &ne; credential</li>
+                                <li class="flex items-center"><span class="text-red-400 mr-2">&#x2716;</span> Login this morning &ne; ongoing auth</li>
+                                <li class="flex items-center"><span class="text-red-400 mr-2">&#x2716;</span> Managed device &ne; green light without posture</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="auditing" class="content-section pt-12 border-t border-stone-200">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-900 mb-4">Auditing & Architectural Smells</h2>
+                    <p class="text-base text-stone-600 leading-relaxed max-w-3xl">
+                        Network auditing begins with a visual assessment of the three core maps (Physical, Logical, Trust). During this process, specific anti-patterns or "smells" emerge. The visualization below represents the relative frequency and severity of the 12 Architectural Smells typically found during a first audit, emphasizing the critical areas to target during mapping.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                    <div class="md:col-span-1 bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+                        <h3 class="font-bold text-stone-800 mb-3 border-b border-stone-100 pb-2">10-Second Triage</h3>
+                        <p class="text-xs text-stone-500 mb-3 font-mono">If missing -> finding before label 1.</p>
+                        <ul class="space-y-2 text-sm text-stone-700">
+                            <li class="flex items-center"><span class="w-4 text-accent-dark">&#x27A4;</span> Where is the Internet?</li>
+                            <li class="flex items-center"><span class="w-4 text-accent-dark">&#x27A4;</span> Boundary firewall?</li>
+                            <li class="flex items-center"><span class="w-4 text-accent-dark">&#x27A4;</span> Where is the DMZ?</li>
+                            <li class="flex items-center"><span class="w-4 text-accent-dark">&#x27A4;</span> Admin access?</li>
+                            <li class="flex items-center"><span class="w-4 text-accent-dark">&#x27A4;</span> Where is the data?</li>
+                        </ul>
+                    </div>
+                    <div class="md:col-span-3 bg-white border border-stone-200 rounded-xl p-5 shadow-sm">
+                        <div class="chart-container">
+                            <canvas id="smellChart"></canvas>
+                        </div>
+                        <p class="text-center text-xs text-stone-500 mt-2 font-mono">Simulated Audit Distribution data demonstrating the prevalence of the 12 Smells.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="lab" class="content-section pt-12 pb-24 border-t border-stone-200">
+                 <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-stone-900 mb-4">Lab 02 Workspace: Validation & Scoring</h2>
+                    <p class="text-base text-stone-600 leading-relaxed max-w-3xl">
+                        This section provides operational tools for Lab 02 execution. As you document the NorthernEdge case study, utilize the Trust-Boundary Score calculator to quantify your architectural findings. Remember, a finding without a remediation is a complaint; a remediation without an owner is a wish.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+                        <div class="bg-stone-100 px-6 py-4 border-b border-stone-200">
+                            <h3 class="font-bold text-stone-800">Trust-Boundary Score Calculator</h3>
+                            <p class="text-xs text-stone-500">Single-number KPIs survive board meetings.</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6 bg-blue-50 p-4 rounded text-sm text-blue-800 border border-blue-100">
+                                <strong>Formula:</strong> 100 &minus; 10 &times; (bad adjacencies). Floor 0. <br>
+                                <strong>Bad adjacency:</strong> Two devices on the same subnet, tagged different trust zones.
+                            </div>
+                            
+                            <label for="bad-adj" class="block text-sm font-medium text-stone-700 mb-2">Number of Bad Adjacencies Found in Diagram</label>
+                            <input type="number" id="bad-adj" min="0" max="20" value="0" class="w-full bg-stone-50 border border-stone-300 text-stone-900 text-lg rounded focus:ring-accent-dark focus:border-accent-dark block p-3 mb-6 outline-none transition-colors">
+                            
+                            <div class="flex items-center justify-between bg-stone-900 text-white p-6 rounded-lg shadow-inner">
+                                <div>
+                                    <div class="text-stone-400 text-sm font-semibold uppercase tracking-wider mb-1">Final Score</div>
+                                    <div class="text-5xl font-bold font-mono" id="tb-score">100</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-stone-400 text-sm font-semibold uppercase tracking-wider mb-1">Grade</div>
+                                    <div class="text-5xl font-bold font-mono text-green-400 transition-colors" id="tb-grade">A</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col space-y-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+                            <h3 class="font-bold text-stone-800 mb-4 flex items-center border-b border-stone-100 pb-2">
+                                <span class="mr-2">&#x1F4CB;</span> Risk Register Template
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left text-stone-500">
+                                    <thead class="text-xs text-stone-700 uppercase bg-stone-50 border-b border-stone-200">
+                                        <tr>
+                                            <th class="px-3 py-2">Finding</th>
+                                            <th class="px-3 py-2">Sev</th>
+                                            <th class="px-3 py-2">Remediation</th>
+                                            <th class="px-3 py-2">Owner</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                            <td class="px-3 py-2 font-medium text-stone-900">One big subnet</td>
+                                            <td class="px-3 py-2"><span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">High</span></td>
+                                            <td class="px-3 py-2">4-VLAN split</td>
+                                            <td class="px-3 py-2">NetOps</td>
+                                        </tr>
+                                        <tr class="border-b border-stone-100 hover:bg-stone-50">
+                                            <td class="px-3 py-2 font-medium text-stone-900">Admin on user VLAN</td>
+                                            <td class="px-3 py-2"><span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">High</span></td>
+                                            <td class="px-3 py-2">Mgmt VLAN</td>
+                                            <td class="px-3 py-2">NetOps</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4" class="px-3 py-4 text-center text-stone-400 italic">Minimum six rows for full marks.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="bg-amber-50 rounded-xl border border-amber-200 p-6">
+                             <h3 class="font-bold text-amber-900 mb-2">Final Deliverable Structure (10 pages A4)</h3>
+                             <ol class="list-decimal list-inside text-sm text-amber-800 space-y-1 ml-2">
+                                 <li>Cover &middot; executive summary</li>
+                                 <li>Three maps &middot; checklist &middot; risk register</li>
+                                 <li>Completeness JSON</li>
+                                 <li>Three derived views</li>
+                                 <li>Trust-Boundary Score</li>
+                                 <li>Smell-scan Markdown</li>
+                                 <li class="font-bold">Three human-only findings &larr; graded strictest</li>
+                                 <li>Reflection + Appendices A &amp; B</li>
+                             </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mainContainer = document.getElementById('main-container');
+            const sections = document.querySelectorAll('.content-section');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('data-target');
+                    const targetEl = document.getElementById(targetId);
+                    
+                    if (targetEl) {
+                        mainContainer.scrollTo({
+                            top: targetEl.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            const observerOptions = {
+                root: mainContainer,
+                rootMargin: '0px 0px -60% 0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('data-target') === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(sec => observer.observe(sec));
+
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => {
+                        b.classList.remove('text-accent-dark', 'border-b-2', 'border-accent-dark');
+                        b.classList.add('text-stone-500');
+                    });
+                    
+                    btn.classList.remove('text-stone-500');
+                    btn.classList.add('text-accent-dark', 'border-b-2', 'border-accent-dark');
+
+                    const targetId = btn.getAttribute('data-target');
+                    tabContents.forEach(tc => {
+                        tc.classList.remove('active');
+                        if (tc.id === targetId) tc.classList.add('active');
+                    });
+                });
+            });
+
+            const didLayers = document.querySelectorAll('.did-layer');
+            didLayers.forEach(layer => {
+                layer.addEventListener('mouseenter', () => {
+                    const desc = layer.querySelector('.target-desc');
+                    if(desc) desc.classList.remove('opacity-0');
+                });
+                layer.addEventListener('mouseleave', () => {
+                    const desc = layer.querySelector('.target-desc');
+                    if(desc) desc.classList.add('opacity-0');
+                });
+            });
+
+            const adjInput = document.getElementById('bad-adj');
+            const scoreDisplay = document.getElementById('tb-score');
+            const gradeDisplay = document.getElementById('tb-grade');
+
+            const updateScore = () => {
+                let bad = parseInt(adjInput.value) || 0;
+                if (bad < 0) { bad = 0; adjInput.value = 0; }
+                
+                let score = Math.max(0, 100 - (10 * bad));
+                
+                let grade = 'F';
+                let gradeColor = 'text-red-500';
+                
+                if (score >= 90) {
+                    grade = 'A';
+                    gradeColor = 'text-green-400';
+                } else if (score >= 75) {
+                    grade = 'B';
+                    gradeColor = 'text-blue-400';
+                } else if (score >= 60) {
+                    grade = 'C';
+                    gradeColor = 'text-yellow-400';
+                }
+
+                scoreDisplay.textContent = score;
+                gradeDisplay.textContent = grade;
+                gradeDisplay.className = `text-5xl font-bold font-mono transition-colors ${gradeColor}`;
+            };
+
+            adjInput.addEventListener('input', updateScore);
+            updateScore(); 
+
+            const ctx = document.getElementById('smellChart').getContext('2d');
+            
+            const smells = [
+                "One big subnet",
+                "Printers on every VLAN",
+                "Diagram older than viewing team",
+                "Wireless = wired (same VLAN)",
+                "No out-of-band management",
+                "Admin interface on user VLAN",
+                "IoT on user network",
+                "Public service with no DMZ",
+                "No backup network",
+                "'Cloud' with no detail",
+                "'Firewall' with no zone labels",
+                "One Internet circuit, no failover"
+            ];
+
+            const frequencies = [95, 88, 85, 75, 70, 65, 60, 50, 45, 40, 35, 20];
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: smells,
+                    datasets: [{
+                        label: 'Frequency Found in Audits (%)',
+                        data: frequencies,
+                        backgroundColor: '#0369a1',
+                        borderRadius: 4,
+                        barPercentage: 0.7,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1c1917',
+                            padding: 12,
+                            titleFont: { size: 14, family: 'Inter' },
+                            bodyFont: { size: 13, family: 'Inter' },
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Prevalence: ${context.parsed.x}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: { color: '#e7e5e4' },
+                            ticks: { font: { family: 'Inter' }, color: '#78716c' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { 
+                                font: { family: 'Inter', size: 11 }, 
+                                color: '#44403c',
+                                callback: function(value) {
+                                    let label = this.getLabelForValue(value);
+                                    if (label.length > 16) {
+                                        let words = label.split(' ');
+                                        let line = '';
+                                        let lines = [];
+                                        for(let i=0; i<words.length; i++){
+                                            if((line + words[i]).length > 16) {
+                                                lines.push(line.trim());
+                                                line = words[i] + ' ';
+                                            } else {
+                                                line += words[i] + ' ';
+                                            }
+                                        }
+                                        lines.push(line.trim());
+                                        return lines;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
