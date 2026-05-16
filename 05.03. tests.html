@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Tools Study Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tab Styles */
+        .tab-btn.active {
+            border-bottom: 2px solid #0f766e;
+            color: #0f766e;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Flashcard Flip Animation */
+        .flashcard {
+            perspective: 1000px;
+            cursor: pointer;
+            height: 200px;
+        }
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        .flashcard-front {
+            background-color: #ffffff;
+            border: 2px solid #e2e8f0;
+            color: #1e293b;
+        }
+        .flashcard-back {
+            background-color: #0f766e;
+            color: #ffffff;
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-4 md:mb-0">
+                <span>🛡️</span> Monitoring Study Guide
+            </h1>
+            <nav class="flex space-x-6">
+                <button onclick="switchTab('flashcards')" id="tab-flashcards" class="tab-btn active pb-2 text-slate-500 hover:text-teal-700 transition-colors">Flashcards (25)</button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn pb-2 text-slate-500 hover:text-teal-700 transition-colors">Practice Quiz (10)</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        <div id="content-flashcards" class="tab-content active">
+            <div class="mb-6 flex justify-between items-center">
+                <p class="text-slate-600">Click any card to flip it and reveal the answer.</p>
+                <button onclick="flipAll()" class="text-sm bg-slate-200 hover:bg-slate-300 text-slate-700 py-1 px-3 rounded transition-colors">Flip All</button>
+            </div>
+            <div id="flashcards-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                </div>
+        </div>
+
+        <div id="content-quiz" class="tab-content">
+            <p class="text-slate-600 mb-8">Test your knowledge. Select an answer to see immediate feedback.</p>
+            <div id="quiz-container" class="space-y-8">
+                </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA ---
+        const flashcardsData = [
+            { front: "The four jobs of monitoring", back: "Packets, metrics, logs, and alerts." },
+            { front: "Primary function of Wireshark", back: "Packet analysis; it shows every byte on the wire without summarizing." },
+            { front: "Underlying packet capture libraries for Wireshark", back: "libpcap for Linux/macOS and Npcap for Windows." },
+            { front: "Primary function of Nmap", back: "Network discovery and inventory scanning." },
+            { front: "Legal requirement before using Nmap", back: "Explicit authorized scope (consent in writing) to avoid violating criminal codes." },
+            { front: "Primary function of Cacti", back: "Time-series graphing based on SNMP polling." },
+            { front: "Primary function of Nagios", back: "Availability monitoring based on simple scripts returning exit codes (0/1/2/3)." },
+            { front: "SNMP versions that send community strings in cleartext", back: "SNMPv1 and SNMPv2c." },
+            { front: "Default ports for SNMP polling and traps", back: "UDP/161 for polling and UDP/162 for traps." },
+            { front: "Standard ports for Syslog", back: "UDP/514, TCP/514, or TLS-protected TCP/6514." },
+            { front: "Formula for Syslog Priority", back: "Priority = Facility × Severity" },
+            { front: "Syslog Severity Level 0", back: "Emergency (System unusable)." },
+            { front: "Syslog Severity Level 1", back: "Alert (Act now)." },
+            { front: "Syslog Severity Level 7", back: "Debug (Developer only, usually dropped in production)." },
+            { front: "Severity levels typically used for alerting in production", back: "Levels 0 through 3 (Emergency, Alert, Critical, Error)." },
+            { front: "Modern enterprise stack role for Zeek", back: "Connection log generator for network visibility." },
+            { front: "Modern enterprise stack role for Suricata", back: "Multi-threaded IDS/IPS/NSM for signatures." },
+            { front: "Networking rule for malware/security lab VMs", back: "Use Host-only or NAT networking; never use bridged mode." },
+            { front: "Three main roles in a Splunk architecture", back: "Forwarder, Indexer, and Search Head." },
+            { front: "Origins of Wazuh", back: "Forked from OSSEC in 2015." },
+            { front: "Capabilities provided by Wazuh out-of-the-box", back: "SIEM-lite, EDR-lite, and vulnerability scanning." },
+            { front: "Core components of the Elastic pattern", back: "Filebeat/Vector → Logstash → OpenSearch → Kibana." },
+            { front: "Security Onion", back: "A single-ISO SOC-in-a-box bundling tools like Zeek, Suricata, Wazuh, and Elastic." },
+            { front: "Difference between a defense tool and an attack tool", back: "Consent in writing (authorized scope)." },
+            { front: "Best practice before downloading suspicious files", back: "Paste the URL or file into VirusTotal first." }
+        ];
+
+        const quizData = [
+            {
+                q: "A network engineer needs to investigate an issue where specific bytes are suspected to be corrupted. Which tool is best suited?",
+                hint: "Think about which tool provides the raw, unsummarized truth.",
+                options: [
+                    { t: "Wireshark (Packets)", c: true, r: "Wireshark captures packets at the byte level without summarizing." },
+                    { t: "Cacti (Metrics)", c: false, r: "Cacti provides time-series graphing based on SNMP polling, summarizing data." },
+                    { t: "Splunk (Logs)", c: false, r: "Splunk searches log files, which report events rather than raw packet data." },
+                    { t: "Nagios (Alerts)", c: false, r: "Nagios monitors availability through scripts, rather than capturing raw packets." }
+                ]
+            },
+            {
+                q: "You are assigned to perform a network discovery scan using Nmap. What is the most critical prerequisite?",
+                hint: "Using tools without this can violate criminal codes.",
+                options: [
+                    { t: "Ensuring Zenmap is installed for a graphical interface.", c: false, r: "Zenmap is a GUI, not a legal prerequisite." },
+                    { t: "Configuring the -sn ping sweep flag.", c: false, r: "Flags alter behavior but don't substitute authorization." },
+                    { t: "Obtaining explicit, written consent from the network owner.", c: true, r: "Using discovery tools without authorization is illegal access." },
+                    { t: "Running the scan from a Kali Linux toolbox.", c: false, r: "The OS choice doesn't bypass the legal requirement." }
+                ]
+            },
+            {
+                q: "Your team wants a dashboard that pages an admin if a server goes offline. Which tool is designed for this?",
+                hint: "Look for the tool built for 'availability monitoring' relying on script exit codes.",
+                options: [
+                    { t: "Nagios", c: true, r: "Built entirely around availability monitoring, interpreting exit codes (0, 1, 2) to trigger paging." },
+                    { t: "Cacti", c: false, r: "Excels at displaying historical metrics but natively lacks built-in paging." },
+                    { t: "Wireshark", c: false, r: "Packet capture tools are not designed to monitor long-term availability." },
+                    { t: "OpenSearch", c: false, r: "It is a backend database engine, not a polling engine." }
+                ]
+            },
+            {
+                q: "Why does configuring devices to use SNMPv2c pose a significant security risk?",
+                hint: "Think about how authentication works in older versions.",
+                options: [
+                    { t: "It operates over TCP/161.", c: false, r: "SNMP primarily utilizes UDP." },
+                    { t: "Community strings are transmitted in cleartext.", c: true, r: "Earlier versions do not encrypt community strings, acting like passwords on a postcard." },
+                    { t: "It requires the use of RRDtool.", c: false, r: "RRDtool is a graphing backend, not a protocol vulnerability." },
+                    { t: "It automatically forwards all syslogs.", c: false, r: "SNMP is a distinct protocol from syslog." }
+                ]
+            },
+            {
+                q: "Your policy pages the on-call engineer for syslog severity 0 through 3. Which event triggers a page?",
+                options: [
+                    { t: "A 'Warning' condition (Level 4).", c: false, r: "Warning events are logged for auditing, not immediate alerts." },
+                    { t: "A 'Notice' event (Level 5).", c: false, r: "Notice conditions are stored for review." },
+                    { t: "An 'Informational' message (Level 6).", c: false, r: "Informational events provide operational context." },
+                    { t: "A hardware failure causing a 'Critical' condition.", c: true, r: "Severity level 2 (Critical) falls within the 0-3 action range." }
+                ]
+            },
+            {
+                q: "You need one tool to generate deep connection logs, and another to actively inspect traffic against signatures. Which combination fits?",
+                options: [
+                    { t: "Zeek for connection logs and Suricata for IDS/IPS.", c: true, r: "Zeek excels at network visibility, while Suricata matches traffic against IDS signatures." },
+                    { t: "Suricata for connection logs and Zeek for IDS/IPS.", c: false, r: "This reverses the primary strengths of the tools." },
+                    { t: "Wazuh for connection logs and Splunk for IDS/IPS.", c: false, r: "Neither natively generate network connection logs directly from the wire." },
+                    { t: "Nmap for connection logs and Wireshark for IDS/IPS.", c: false, r: "Nmap is active scanning, Wireshark is packet capture; neither are continuous sensors." }
+                ]
+            },
+            {
+                q: "In a Splunk architecture, which role is responsible for storing incoming data and processing search queries?",
+                options: [
+                    { t: "The Forwarder", c: false, r: "Sits on endpoints to collect data, but does not store searches." },
+                    { t: "The Indexer", c: true, r: "Transforms raw data into searchable events and stores them on disk." },
+                    { t: "The Search Head", c: false, r: "Provides the web interface but relies on Indexers to hold the data." },
+                    { t: "The HTTP Event Collector", c: false, r: "An input method, not a storage node." }
+                ]
+            },
+            {
+                q: "Which open-source platform provides SIEM capabilities, EDR, and vulnerability scanning out-of-the-box using installed agents?",
+                options: [
+                    { t: "Security Onion", c: false, r: "It's a full-SOC bundle containing many network tools, not just an agent platform." },
+                    { t: "Prometheus", c: false, r: "Designed for numeric performance metrics, not security logs." },
+                    { t: "Wazuh", c: true, r: "Forked from OSSEC, it bundles SIEM, EDR, and vuln-scanning into an agent-server architecture." },
+                    { t: "OpenSearch", c: false, r: "The underlying log database, but lacks built-in EDR agents on its own." }
+                ]
+            },
+            {
+                q: "For a lab requiring accurate emulation of enterprise routing with real firmware images, which environment is best?",
+                options: [
+                    { t: "VirtualBox", c: false, r: "Ideal for endpoints but lacks native emulation for complex router fabrics." },
+                    { t: "AWS Academy", c: false, r: "Offers cloud infrastructure, not local router OS emulation." },
+                    { t: "VMware Workstation Pro", c: false, r: "A standard desktop hypervisor, not a specialized network fabric emulator." },
+                    { t: "GNS3", c: true, r: "Excels at running actual firmware images for routing and switching, despite high RAM usage." }
+                ]
+            },
+            {
+                q: "What is a critical requirement for a new network device to centralize its event logs into a SIEM?",
+                options: [
+                    { t: "It must have a built-in Wazuh agent.", c: false, r: "Hardware routers often can't run custom agents but can still forward logs." },
+                    { t: "It must support sending logs via the syslog protocol.", c: true, r: "Syslog is the universal log protocol and a baseline requirement for standard SIEMs." },
+                    { t: "It must operate exclusively on UDP 161.", c: false, r: "Port 161 is for SNMP polling, not log forwarding." },
+                    { t: "It must generate PCAP files.", c: false, r: "Packet capture is for network sensors, not standard log forwarding." }
+                ]
+            }
+        ];
+
+        // --- RENDER LOGIC ---
+
+        function renderFlashcards() {
+            const grid = document.getElementById('flashcards-grid');
+            flashcardsData.forEach((card, index) => {
+                grid.innerHTML += `
+                    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">
+                                <h3 class="font-semibold text-lg leading-tight text-center">${card.front}</h3>
+                            </div>
+                            <div class="flashcard-back">
+                                <p class="text-sm md:text-base font-medium">${card.back}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            
+            // Shuffle options for each question
+            quizData.forEach(q => {
+                for (let i = q.options.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [q.options[i], q.options[j]] = [q.options[j], q.options[i]];
+                }
+            });
+
+            quizData.forEach((q, qIndex) => {
+                let optionsHtml = '';
+                q.options.forEach((opt, oIndex) => {
+                    const optId = `q${qIndex}o${oIndex}`;
+                    optionsHtml += `
+                        <div class="mb-3">
+                            <label class="flex items-start p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors option-label group" id="label-${optId}">
+                                <div class="flex items-center h-5">
+                                    <input type="radio" name="question${qIndex}" id="${optId}" value="${opt.c}" 
+                                        class="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 focus:ring-teal-500"
+                                        onclick="checkAnswer(${qIndex}, '${optId}', ${opt.c}, '${opt.r.replace(/'/g, "\\'")}')">
+                                </div>
+                                <div class="ml-3 text-sm flex-1">
+                                    <span class="font-medium text-slate-700 group-hover:text-slate-900">${opt.t}</span>
+                                </div>
+                            </label>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200" id="q-card-${qIndex}">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2"><span class="text-teal-600 mr-2">${qIndex + 1}.</span> ${q.q}</h3>
+                        ${q.hint ? `<p class="text-xs text-slate-500 mb-4 italic p-2 bg-slate-50 rounded border-l-2 border-slate-300">💡 Hint: ${q.hint}</p>` : ''}
+                        <div class="mt-4">
+                            ${optionsHtml}
+                        </div>
+                        <div id="feedback-${qIndex}" class="mt-4 hidden p-4 rounded-lg text-sm"></div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function switchTab(tabId) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active', 'border-b-2'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).style.borderBottomWidth = '2px'; // Tailwind workaround
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`content-${tabId}`).classList.add('active');
+        }
+
+        let allFlipped = false;
+        function flipAll() {
+            const cards = document.querySelectorAll('.flashcard');
+            allFlipped = !allFlipped;
+            cards.forEach(card => {
+                if (allFlipped) card.classList.add('flipped');
+                else card.classList.remove('flipped');
+            });
+        }
+
+        function checkAnswer(qIndex, optId, isCorrect, rationale) {
+            const fbDiv = document.getElementById(`feedback-${qIndex}`);
+            const labels = document.querySelectorAll(`input[name="question${qIndex}"]`);
+            
+            // Disable all inputs for this question after answering
+            labels.forEach(input => {
+                input.disabled = true;
+                const labelContainer = document.getElementById(`label-${input.id}`);
+                labelContainer.classList.remove('hover:bg-slate-50', 'cursor-pointer');
+                labelContainer.classList.add('opacity-60', 'cursor-not-allowed');
+            });
+
+            // Highlight chosen option
+            const chosenLabel = document.getElementById(`label-${optId}`);
+            chosenLabel.classList.remove('opacity-60');
+            chosenLabel.classList.add('border-2');
+
+            if (isCorrect) {
+                chosenLabel.classList.add('border-green-500', 'bg-green-50');
+                fbDiv.innerHTML = `<strong class="text-green-700 block mb-1">✅ Correct!</strong> <span class="text-green-800">${rationale}</span>`;
+                fbDiv.className = "mt-4 p-4 rounded-lg text-sm bg-green-100 block animation-fadeIn";
+            } else {
+                chosenLabel.classList.add('border-red-500', 'bg-red-50');
+                fbDiv.innerHTML = `<strong class="text-red-700 block mb-1">❌ Incorrect.</strong> <span class="text-red-800">${rationale}</span>`;
+                fbDiv.className = "mt-4 p-4 rounded-lg text-sm bg-red-100 block animation-fadeIn";
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFlashcards();
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
+
+
