@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYB-01 Interactive Lab Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Neutrals with Subtle Technical Accents (Stone, Emerald, Amber, Sky) -->
+    <!-- Application Structure Plan: A task-oriented dashboard structure. Replaces a linear document with a modular, tabbed interface to reduce cognitive load. The structure is divided into "Mission Control" (overview/standards), "Day 05 Builder" (infrastructure), "Day 06 SOC Stack" (monitoring tools), and "Reference Hub". This allows students to focus solely on their current phase of the lab while keeping resources and grading standards easily accessible. Interactive checklists enforce the strict reporting standards. -->
+    <!-- Visualization & Content Choices: 
+         1. Grading Impact -> Inform -> Donut Chart -> Hover details -> Justification: Shows the weight of the current task visually -> Chart.js.
+         2. VM Resource Allocation -> Compare -> Bar Chart -> Hover details -> Justification: Helps students verify their hardware can support the lab before starting -> Chart.js.
+         3. Network Topology -> Organize -> HTML/CSS Grid Diagram -> None -> Justification: Replaces complex imagery with clean, accessible, structural code elements -> HTML/Tailwind.
+         4. Reporting Standards -> Inform/Organize -> Interactive Checklist -> Click to toggle state -> Justification: Active engagement ensures students don't miss grading criteria -> Vanilla JS.
+         CONFIRMING NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #fafaf9;
+            color: #1c1917;
+        }
+        .code-block {
+            background-color: #292524;
+            color: #f5f5f4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: monospace;
+            white-space: pre;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .nav-btn.active {
+            background-color: #e7e5e4;
+            border-bottom-width: 4px;
+            border-bottom-color: #059669;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen">
+
+    <nav class="bg-stone-100 border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-xl font-bold text-stone-800 tracking-tight">🛡️ Cyber.SoHo CYB-01</span>
+                </div>
+                <div class="hidden md:flex space-x-2 items-center">
+                    <button onclick="nav('overview')" id="nav-overview" class="nav-btn active px-3 py-2 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-200 transition-colors">Mission Control</button>
+                    <button onclick="nav('day05')" id="nav-day05" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-200 transition-colors">Day 05: Base Infra</button>
+                    <button onclick="nav('day06')" id="nav-day06" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-200 transition-colors">Day 06: SOC Stack</button>
+                    <button onclick="nav('reference')" id="nav-reference" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-stone-700 hover:bg-stone-200 transition-colors">Reference Hub</button>
+                </div>
+                <div class="md:hidden flex items-center">
+                    <select onchange="nav(this.value)" class="bg-stone-200 border-stone-300 rounded-md text-sm py-1 px-2 focus:ring-emerald-500">
+                        <option value="overview">Mission Control</option>
+                        <option value="day05">Day 05: Base Infra</option>
+                        <option value="day06">Day 06: SOC Stack</option>
+                        <option value="reference">Reference Hub</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <section id="sec-overview" class="tab-content active">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-stone-900 mb-2">Preventive Surveillance in Cybersecurity</h1>
+                <p class="text-lg text-stone-600 mb-4">Module: Installing and Configuring Monitoring Tools (Days 05 & 06) — Course 420-D01-AB</p>
+                <div class="bg-amber-100 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-3">⏰</span>
+                        <div>
+                            <h3 class="text-amber-800 font-bold">Hard Deadline</h3>
+                            <p class="text-amber-900">Saturday, 31 May, 23:59 EST. Upload to OmniVox LEA DropBox.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-stone-700 mb-8 leading-relaxed">
+                Welcome to the CYB-01 Interactive Lab Portal. This environment is designed to guide you through building your foundational IT and security monitoring infrastructure. You will spin up virtual machines, configure networks, and deploy enterprise-grade security tools like Wazuh and Splunk. This module requires active engagement and rigorous documentation.
+            </p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h2 class="text-xl font-bold text-stone-800 mb-4">The Reporting Standard</h2>
+                    <p class="text-sm text-stone-600 mb-4">Your deliverable must be able to teach this material to someone with zero prior knowledge. Use the checklist below to verify your work before submission.</p>
+                    
+                    <div class="space-y-3" id="standards-checklist">
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 flex flex-col">
+                    <h2 class="text-xl font-bold text-stone-800 mb-4">Course Deliverable Weight</h2>
+                    <p class="text-sm text-stone-600 mb-4">The two chapters in this pack count for 10% of the final grade.</p>
+                    <div class="flex-grow flex items-center justify-center">
+                        <div class="chart-container">
+                            <canvas id="gradeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-day05" class="tab-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-stone-900 mb-2">Day 05: Base Infrastructure</h1>
+                <p class="text-lg text-stone-600">Building your Lab Environment on VirtualBox, GNS3 and AWS.</p>
+            </div>
+            
+            <p class="text-stone-700 mb-8 leading-relaxed">
+                Every Lab in the rest of this course assumes you can spin up a clean Windows or Linux VM, snapshot it, network it to a router VM, and tear it down cleanly. This section guides you through creating that reliable foundation across local, simulated, and cloud environments.
+            </p>
+
+            <div class="mb-10 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h2 class="text-xl font-bold text-stone-800 mb-6">Target Topology Overview</h2>
+                
+                <div class="flex flex-col lg:flex-row gap-6 items-stretch">
+                    <div class="flex-1 bg-stone-50 border-2 border-stone-300 rounded-lg p-4 relative">
+                        <span class="absolute -top-3 left-4 bg-stone-50 px-2 text-sm font-bold text-stone-600">Your Laptop (Host)</span>
+                        <div class="bg-white border-2 border-dashed border-emerald-400 rounded p-4 mb-4 mt-2">
+                            <h4 class="text-center font-semibold text-emerald-800 mb-3">VirtualBox Host-Only Network (10.10.10.0/24)</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div class="bg-stone-100 p-2 text-center rounded border border-stone-200 text-sm">
+                                    <div class="text-xl mb-1">🖥️</div>
+                                    <div class="font-bold">Win10</div>
+                                    <div class="text-xs text-stone-500">Victim</div>
+                                </div>
+                                <div class="bg-stone-100 p-2 text-center rounded border border-stone-200 text-sm">
+                                    <div class="text-xl mb-1">🐧</div>
+                                    <div class="font-bold">Ubuntu</div>
+                                    <div class="text-xs text-stone-500">Server</div>
+                                </div>
+                                <div class="bg-stone-100 p-2 text-center rounded border border-stone-200 text-sm">
+                                    <div class="text-xl mb-1">🐉</div>
+                                    <div class="font-bold">Kali Linux</div>
+                                    <div class="text-xs text-stone-500">Analyst</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white border-2 border-sky-300 rounded p-4">
+                            <h4 class="text-center font-semibold text-sky-800 mb-3">GNS3 Linked</h4>
+                            <div class="bg-stone-100 p-2 text-center rounded border border-stone-200 text-sm max-w-xs mx-auto">
+                                <div class="text-xl mb-1">🧱</div>
+                                <div class="font-bold">OPNsense FW</div>
+                                <div class="text-xs text-stone-500">Bridged to VirtualBox</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center text-stone-400">
+                        <span class="text-3xl hidden lg:block">🔗</span>
+                    </div>
+
+                    <div class="flex-1 bg-stone-50 border-2 border-stone-300 rounded-lg p-4 relative flex flex-col justify-center">
+                        <span class="absolute -top-3 left-4 bg-stone-50 px-2 text-sm font-bold text-stone-600">AWS Cloud</span>
+                        <div class="bg-white border-2 border-amber-300 rounded p-6 text-center shadow-sm">
+                            <div class="text-3xl mb-2">☁️</div>
+                            <h4 class="font-bold text-amber-900 mb-1">AWS Academy Learner Lab</h4>
+                            <p class="text-sm text-stone-600">Ubuntu EC2 Instance</p>
+                            <p class="text-xs mt-2 text-amber-700 italic">Optional VPN tunnel connection</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h2 class="text-xl font-bold text-stone-800 mb-4">Required VM Resources</h2>
+                    <p class="text-sm text-stone-600 mb-4">Ensure your host machine can support these allocations simultaneously (min 8GB RAM total, 16GB recommended).</p>
+                    <div class="chart-container">
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h2 class="text-xl font-bold text-stone-800 mb-4">Deployment Phases</h2>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4 border-b border-stone-200 pb-2">
+                        <button onclick="showSubTab('d5', 0)" id="btn-d5-0" class="d5-btn active bg-stone-800 text-white px-3 py-1 rounded text-sm font-medium transition-colors">0. Pre-flight</button>
+                        <button onclick="showSubTab('d5', 1)" id="btn-d5-1" class="d5-btn bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded text-sm font-medium transition-colors">1. VirtualBox</button>
+                        <button onclick="showSubTab('d5', 2)" id="btn-d5-2" class="d5-btn bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded text-sm font-medium transition-colors">2. VMs</button>
+                        <button onclick="showSubTab('d5', 3)" id="btn-d5-3" class="d5-btn bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded text-sm font-medium transition-colors">3. GNS3</button>
+                        <button onclick="showSubTab('d5', 4)" id="btn-d5-4" class="d5-btn bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded text-sm font-medium transition-colors">4. AWS</button>
+                        <button onclick="showSubTab('d5', 5)" id="btn-d5-5" class="d5-btn bg-stone-200 text-stone-700 hover:bg-stone-300 px-3 py-1 rounded text-sm font-medium transition-colors">5. Verify</button>
+                    </div>
+
+                    <div id="content-d5-0" class="d5-content block space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">Pre-flight Checklist</h3>
+                        <p>Verify these before installing anything. Capture a screenshot of your laptop's About/System info panel.</p>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li>CPU supports virtualisation (Intel VT-x or AMD-V). Check via <code class="bg-stone-100 px-1 rounded">systeminfo | findstr Hyper-V</code> (Windows) or <code class="bg-stone-100 px-1 rounded">lscpu | grep Virtualization</code> (Linux).</li>
+                            <li>At least 8 GB RAM (16 GB recommended).</li>
+                            <li>At least 60 GB free disk.</li>
+                            <li>Virtualisation enabled in BIOS or UEFI.</li>
+                            <li>On Windows 10/11: Hyper-V disabled (VirtualBox conflicts with it).</li>
+                        </ul>
+                    </div>
+
+                    <div id="content-d5-1" class="d5-content hidden space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">Install VirtualBox & Network</h3>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>Download VirtualBox 7 and install with default selections.</li>
+                            <li>Install the matching Extension Pack (adds USB pass-through, RDP, PXE).</li>
+                            <li>Create a Host-Only Network: <em>File &rarr; Tools &rarr; Network Manager &rarr; Host-only Networks &rarr; Create</em>.</li>
+                            <li>Name: <code class="bg-stone-100 px-1 rounded">vboxnet-cyb01</code></li>
+                            <li>IPv4: <code class="bg-stone-100 px-1 rounded">10.10.10.1/24</code></li>
+                            <li><strong>Disable DHCP</strong> (We need predictable IPs).</li>
+                        </ol>
+                    </div>
+
+                    <div id="content-d5-2" class="d5-content hidden space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">Download and Prepare VMs</h3>
+                        <p>Download images from official sources. Verify SHA-256 and check URLs on VirusTotal.</p>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full text-left border-collapse border border-stone-200 mt-2 mb-4">
+                                <thead>
+                                    <tr class="bg-stone-100 text-stone-800">
+                                        <th class="border border-stone-200 px-3 py-2">VM Name</th>
+                                        <th class="border border-stone-200 px-3 py-2">Adapter 1</th>
+                                        <th class="border border-stone-200 px-3 py-2">Adapter 2</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td class="border border-stone-200 px-3 py-2">cyb01-ubuntu</td><td class="border border-stone-200 px-3 py-2">Host-only (vboxnet-cyb01)</td><td class="border border-stone-200 px-3 py-2">NAT</td></tr>
+                                    <tr><td class="border border-stone-200 px-3 py-2">cyb01-win10</td><td class="border border-stone-200 px-3 py-2">Host-only (vboxnet-cyb01)</td><td class="border border-stone-200 px-3 py-2">NAT</td></tr>
+                                    <tr><td class="border border-stone-200 px-3 py-2">cyb01-kali</td><td class="border border-stone-200 px-3 py-2">Host-only (vboxnet-cyb01)</td><td class="border border-stone-200 px-3 py-2">NAT</td></tr>
+                                    <tr><td class="border border-stone-200 px-3 py-2">cyb01-opnsense</td><td class="border border-stone-200 px-3 py-2">NAT (WAN)</td><td class="border border-stone-200 px-3 py-2">Host-only (LAN)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p>Use credentials <code class="bg-stone-100 px-1 rounded">cyber / Cyber.SoHo2026</code> for reproducible screenshots. Take snapshot <code class="bg-stone-100 px-1 rounded">00-fresh-install</code> after each OS installation.</p>
+                    </div>
+
+                    <div id="content-d5-3" class="d5-content hidden space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">Install GNS3</h3>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>Download GNS3 all-in-one installer. Accept GNS3 VM option.</li>
+                            <li>Import GNS3 OVA into VirtualBox. Start it and note the IP.</li>
+                            <li>In GNS3 App: <em>Edit &rarr; Preferences &rarr; GNS3 VM</em>. Enable and point to the VM IP.</li>
+                            <li><em>Edit &rarr; Preferences &rarr; VirtualBox VMs &rarr; New</em>. Select <code class="bg-stone-100 px-1 rounded">cyb01-opnsense</code>.</li>
+                            <li>Build a test topology: Ethernet switch + OPNsense VM + VPCS host. Verify ping from VPCS to OPNsense LAN.</li>
+                        </ol>
+                    </div>
+
+                    <div id="content-d5-4" class="d5-content hidden space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">AWS Academy Access</h3>
+                        <ol class="list-decimal pl-5 space-y-2">
+                            <li>Access AWS Academy Learner Lab via Canvas module.</li>
+                            <li>Start Lab, click AWS icon to open Management Console.</li>
+                            <li>Launch t2.micro Ubuntu EC2 (us-east-1, default VPC). Security group: SSH from your home IP only.</li>
+                            <li>Generate key pair, download <code class="bg-stone-100 px-1 rounded">.pem</code>.</li>
+                            <li>Connect via SSH. <br><span class="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded inline-block mt-1">⚠️ Always click End Lab when finished to save credits.</span></li>
+                        </ol>
+                        <div class="code-block text-xs mt-2">
+chmod 400 mykey.pem
+ssh -i mykey.pem ubuntu@[ec2-ip-address]</div>
+                    </div>
+
+                    <div id="content-d5-5" class="d5-content hidden space-y-3 text-stone-700 text-sm">
+                        <h3 class="font-bold text-lg text-stone-900">Verification & Snapshots</h3>
+                        <p>Run these commands and capture screenshots to prove connectivity.</p>
+                        <ul class="list-disc pl-5 space-y-2">
+                            <li><strong>From Kali:</strong> <code class="bg-stone-100 px-1 rounded">ping 10.10.10.1</code> and <code class="bg-stone-100 px-1 rounded">nmap -sn 10.10.10.0/24</code></li>
+                            <li><strong>From Ubuntu:</strong> <code class="bg-stone-100 px-1 rounded">ping [Win10-IP]</code></li>
+                            <li><strong>From Windows:</strong> Open browser to <code class="bg-stone-100 px-1 rounded">https://10.10.10.1/</code> (OPNsense login)</li>
+                        </ul>
+                        <p class="font-bold text-emerald-700 mt-4">CRITICAL FINAL STEP:</p>
+                        <p>Take a fresh snapshot of every VM named <code class="bg-stone-100 px-1 rounded">01-networked</code>. This is your save point for all future labs.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-day06" class="tab-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-stone-900 mb-2">Day 06: SOC Stack Integration</h1>
+                <p class="text-lg text-stone-600">Wireshark, SNMP, Wazuh, and Splunk with OPNsense.</p>
+            </div>
+
+            <p class="text-stone-700 mb-8 leading-relaxed">
+                You have the plumbing; now we install the brain. By the end of this lab, you will have a functional SIEM workflow capturing live network traffic, receiving syslogs, and alerting on Windows endpoint security events inside a unified Splunk dashboard. Ensure all VMs are at the <code class="bg-stone-200 px-1 rounded">01-networked</code> snapshot before proceeding.
+            </p>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 mb-8">
+                <div class="flex flex-col md:flex-row gap-4 border-b border-stone-200 pb-4 mb-4">
+                    <button onclick="showSubTab('d6', 1)" id="btn-d6-1" class="d6-btn active w-full md:w-auto text-left md:text-center px-4 py-3 rounded-lg border-2 border-transparent bg-stone-100 text-stone-800 font-bold hover:bg-stone-200 transition-all">
+                        <div class="text-2xl mb-1">🦈</div>
+                        1. Wireshark
+                    </button>
+                    <button onclick="showSubTab('d6', 2)" id="btn-d6-2" class="d6-btn w-full md:w-auto text-left md:text-center px-4 py-3 rounded-lg border-2 border-transparent bg-stone-50 text-stone-600 hover:bg-stone-100 transition-all">
+                        <div class="text-2xl mb-1">📡</div>
+                        2. SNMP
+                    </button>
+                    <button onclick="showSubTab('d6', 3)" id="btn-d6-3" class="d6-btn w-full md:w-auto text-left md:text-center px-4 py-3 rounded-lg border-2 border-transparent bg-stone-50 text-stone-600 hover:bg-stone-100 transition-all">
+                        <div class="text-2xl mb-1">🐺</div>
+                        3. Wazuh
+                    </button>
+                    <button onclick="showSubTab('d6', 4)" id="btn-d6-4" class="d6-btn w-full md:w-auto text-left md:text-center px-4 py-3 rounded-lg border-2 border-transparent bg-stone-50 text-stone-600 hover:bg-stone-100 transition-all">
+                        <div class="text-2xl mb-1">🔥</div>
+                        4. Splunk
+                    </button>
+                    <button onclick="showSubTab('d6', 5)" id="btn-d6-5" class="d6-btn w-full md:w-auto text-left md:text-center px-4 py-3 rounded-lg border-2 border-transparent bg-stone-50 text-stone-600 hover:bg-stone-100 transition-all">
+                        <div class="text-2xl mb-1">📊</div>
+                        5. Log Hunting
+                    </button>
+                </div>
+
+                <div id="content-d6-1" class="d6-content block text-stone-700">
+                    <h3 class="font-bold text-xl mb-4">Phase 1: Wireshark on Capture VM</h3>
+                    <p class="mb-4">Use the Ubuntu VM as the dedicated capture host. Mirror the OPNsense LAN switch traffic to it via GNS3 (right-click switch port &rarr; Configure &rarr; Port Mirroring).</p>
+                    <div class="code-block mb-4">
+# Install Wireshark + tshark
+sudo apt update && sudo apt install -y wireshark tshark
+
+# Add user to wireshark group (avoid root capture)
+sudo usermod -aG wireshark $USER
+newgrp wireshark
+
+# Start a 30-second capture (verify interface name with ip link)
+sudo tshark -i enp0s3 -a duration:30 -w /tmp/cyb01-baseline.pcapng</div>
+                    <p class="text-sm bg-sky-50 border border-sky-200 p-3 rounded text-sky-800">
+                        <strong>Action:</strong> While capturing, generate traffic from the Windows VM (browse, ping). Open the pcapng in Wireshark on your host and filter by <code class="bg-white px-1 rounded">http or dns or icmp</code>.
+                    </p>
+                </div>
+
+                <div id="content-d6-2" class="d6-content hidden text-stone-700">
+                    <h3 class="font-bold text-xl mb-4">Phase 2: SNMP on OPNsense</h3>
+                    <p class="mb-4">Enable SNMP in OPNsense GUI (Services &rarr; SNMP). Set community string to <code class="bg-stone-200 px-1 rounded">labdemo</code>.</p>
+                    <div class="code-block mb-4">
+# On Ubuntu VM: Install Net-SNMP tools and MIBs
+sudo apt install -y snmp snmp-mibs-downloader
+sudo download-mibs
+
+# Walk the system tree
+snmpwalk -v2c -c labdemo 10.10.10.1 1.3.6.1.2.1.1</div>
+                    <div class="bg-amber-50 border border-amber-200 p-4 rounded text-sm text-amber-900 mt-4">
+                        <h4 class="font-bold mb-1">Reflection Prompt Requirement</h4>
+                        <p>Run a Wireshark capture filtered on <code class="bg-white px-1 rounded">snmp</code> during the walk. Notice the community string in cleartext. In your report, discuss SNMPv3 (RFC 3414) vs v1/v2c.</p>
+                    </div>
+                </div>
+
+                <div id="content-d6-3" class="d6-content hidden text-stone-700">
+                    <h3 class="font-bold text-xl mb-4">Phase 3: Install Wazuh Single-Node</h3>
+                    <p class="mb-4 text-amber-700 font-bold">⚠️ Pre-requisite: Shut down Ubuntu VM and increase RAM to 4GB before running this script.</p>
+                    <div class="code-block mb-4">
+# Download official installation assistant
+curl -sO https://packages.wazuh.com/4.7/wazuh-install.sh
+
+# Run in all-in-one mode
+sudo bash ./wazuh-install.sh -a</div>
+                    <p class="mb-4 text-sm bg-stone-100 p-3 rounded">Access dashboard at <code class="font-bold">https://10.10.10.30</code>. Save generated admin credentials immediately.</p>
+                    <h4 class="font-bold text-lg mb-2">Generate an Alert (Windows VM)</h4>
+                    <p class="mb-2 text-sm">Enrol the Windows agent via the dashboard wizard. Then, force authentication failures via PowerShell as Admin:</p>
+                    <div class="code-block mb-4 text-sm">
+1..5 | ForEach-Object {
+    Start-Process -FilePath "runas.exe" `
+                  -ArgumentList "/user:nonsense$_ cmd.exe" `
+                  -ErrorAction SilentlyContinue
+}</div>
+                </div>
+
+                <div id="content-d6-4" class="d6-content hidden text-stone-700">
+                    <h3 class="font-bold text-xl mb-4">Phase 4: Install Splunk Free</h3>
+                    <p class="mb-4 text-sm">Splunk will coexist on the 4GB Ubuntu VM. Download the .deb from Splunk manually (account required).</p>
+                    <div class="code-block mb-4">
+# Install and configure Splunk
+sudo dpkg -i splunk-9.x.x-amd64.deb
+sudo /opt/splunk/bin/splunk start --accept-license
+sudo /opt/splunk/bin/splunk enable boot-start</div>
+                    <ul class="list-disc pl-5 mb-4 text-sm space-y-1">
+                        <li>Access via <code class="bg-stone-200 px-1 rounded">http://10.10.10.30:8000</code>.</li>
+                        <li>Switch to Free License in Settings.</li>
+                        <li>Enable HTTP Event Collector (HEC) and create token <code class="bg-stone-200 px-1 rounded">wazuh-feed</code>.</li>
+                    </ul>
+                    <h4 class="font-bold text-lg mb-2">Forward Wazuh Alerts</h4>
+                    <p class="text-sm mb-2">Edit <code class="bg-stone-200 px-1 rounded">/var/ossec/etc/ossec.conf</code> on Ubuntu to add the custom-splunk integration block, using your HEC token. Restart wazuh-manager.</p>
+                </div>
+
+                <div id="content-d6-5" class="d6-content hidden text-stone-700">
+                    <h3 class="font-bold text-xl mb-4">Phase 5: Cross-OS Log Exploration</h3>
+                    <p class="mb-4">A SIEM abstracts logs, but you must know where they originate. Trigger another Windows failed logon and track it.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-stone-100 p-4 rounded border border-stone-200">
+                            <h4 class="font-bold mb-2">🐧 Linux (Manager)</h4>
+                            <code class="text-xs block bg-stone-800 text-stone-200 p-2 rounded break-words">sudo tail -f /var/ossec/logs/alerts/alerts.log</code>
+                            <p class="text-xs mt-2">Watch alert decisions live.</p>
+                        </div>
+                        <div class="bg-stone-100 p-4 rounded border border-stone-200">
+                            <h4 class="font-bold mb-2">🪟 Windows (Agent)</h4>
+                            <code class="text-xs block bg-stone-800 text-stone-200 p-2 rounded break-words">C:\Program Files (x86)\ossec-agent\ossec.log</code>
+                            <p class="text-xs mt-2">Find the receipt confirmation line.</p>
+                        </div>
+                        <div class="bg-stone-100 p-4 rounded border border-stone-200">
+                            <h4 class="font-bold mb-2">🧱 OPNsense (FW)</h4>
+                            <p class="text-xs mb-2">Add syslog target: 10.10.10.30:514 UDP.</p>
+                            <code class="text-xs block bg-stone-800 text-stone-200 p-2 rounded break-words">sudo tcpdump -i any -n udp port 514</code>
+                            <p class="text-xs mt-2">Run on Ubuntu to see incoming firewall logs.</p>
+                        </div>
+                    </div>
+                    <p class="font-bold text-emerald-700 mt-6 text-center">Take snapshot <code>02-monitoring-stack</code> for all modified VMs.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="sec-reference" class="tab-content">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-stone-900 mb-2">Reference Hub & Safety Protocol</h1>
+                <p class="text-lg text-stone-600">Crucial operational guidelines and verified links.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-emerald-500">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-4">DO...</h2>
+                    <ul class="space-y-3 text-stone-700">
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> Keep lab on isolated host-only/NAT networks.</li>
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> Take a snapshot before every major change.</li>
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> Change default passwords before exposing services.</li>
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> End AWS Academy Labs to preserve credits.</li>
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> Verify all external download URLs via VirusTotal.</li>
+                        <li class="flex items-start"><span class="text-emerald-600 mr-2">✅</span> Mask credentials (HEC tokens, keys) in screenshots.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-rose-500">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-4">DON'T...</h2>
+                    <ul class="space-y-3 text-stone-700">
+                        <li class="flex items-start"><span class="text-rose-600 mr-2">❌</span> Scan/probe anything outside 10.10.10.0/24.</li>
+                        <li class="flex items-start"><span class="text-rose-600 mr-2">❌</span> Install lab tools on personal/work host machines.</li>
+                        <li class="flex items-start"><span class="text-rose-600 mr-2">❌</span> Bridge lab network to campus/home WiFi.</li>
+                        <li class="flex items-start"><span class="text-rose-600 mr-2">❌</span> Publish API keys, PCAPs, or AWS root credentials.</li>
+                        <li class="flex items-start"><span class="text-rose-600 mr-2">❌</span> Copy screenshots from tutorials; generate your own.</li>
+                        <li class="flex items-start"><span class="text-rose-600 mr-2 text-xl font-bold">⚠️</span> <strong>Violate legal boundaries (CCC s.342.1, US CFAA).</strong></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                <h2 class="text-xl font-bold text-stone-800 mb-4">Tool Matrix Alternatives</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-center">
+                    <div class="p-3 bg-stone-50 rounded border border-stone-200">
+                        <span class="block font-bold text-stone-800 mb-1">Hypervisors</span>
+                        <span class="text-stone-600">VMware Workstation, KVM, Proxmox VE</span>
+                    </div>
+                    <div class="p-3 bg-stone-50 rounded border border-stone-200">
+                        <span class="block font-bold text-stone-800 mb-1">Network Sim</span>
+                        <span class="text-stone-600">EVE-NG, Containerlab</span>
+                    </div>
+                    <div class="p-3 bg-stone-50 rounded border border-stone-200">
+                        <span class="block font-bold text-stone-800 mb-1">SIEM / Log</span>
+                        <span class="text-stone-600">OpenSearch, Graylog, Security Onion 2</span>
+                    </div>
+                    <div class="p-3 bg-stone-50 rounded border border-stone-200">
+                        <span class="block font-bold text-stone-800 mb-1">IDS / IPS</span>
+                        <span class="text-stone-600">Snort 3, Zeek, Suricata</span>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 text-sm py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>Cyber.SoHo Educational Hub — From the Industry to the Classroom.</p>
+            <p class="text-xs mt-2">© 2026. Internal educational licence CYB-01. Read disclaimer before proceeding.</p>
+        </div>
+    </footer>
+
+    <script>
+        const state = {
+            checklist: [
+                { id: 'chk1', text: 'Steps are numbered, named, and explained (no "click here").', done: false },
+                { id: 'chk2', text: 'Every screenshot has a caption (Figure #) and context.', done: false },
+                { id: 'chk3', text: 'Commands are verbatim in code blocks with flag explanations.', done: false },
+                { id: 'chk4', text: 'Command outputs are proven via screenshots/text blocks.', done: false },
+                { id: 'chk5', text: 'Links verified via VirusTotal.', done: false },
+                { id: 'chk6', text: 'Troubleshooting section includes symptom, diagnosis, fix.', done: false },
+                { id: 'chk7', text: 'Reflection is >200 words, in personal voice.', done: false }
+            ]
+        };
+
+        function nav(sectionId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('sec-' + sectionId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-stone-200', 'border-b-4', 'border-emerald-600', 'font-bold');
+            });
+            const activeBtn = document.getElementById('nav-' + sectionId);
+            if(activeBtn) {
+                activeBtn.classList.add('bg-stone-200', 'border-b-4', 'border-emerald-600', 'font-bold');
+            }
+        }
+
+        function showSubTab(prefix, index) {
+            document.querySelectorAll('.' + prefix + '-content').forEach(el => {
+                el.classList.remove('block');
+                el.classList.add('hidden');
+            });
+            document.getElementById('content-' + prefix + '-' + index).classList.remove('hidden');
+            document.getElementById('content-' + prefix + '-' + index).classList.add('block');
+
+            document.querySelectorAll('.' + prefix + '-btn').forEach(el => {
+                if(prefix === 'd5') {
+                    el.classList.remove('bg-stone-800', 'text-white');
+                    el.classList.add('bg-stone-200', 'text-stone-700');
+                } else {
+                    el.classList.remove('bg-stone-100', 'border-stone-300', 'shadow-sm');
+                    el.classList.add('bg-stone-50', 'border-transparent');
+                }
+            });
+            
+            const activeBtn = document.getElementById('btn-' + prefix + '-' + index);
+            if(prefix === 'd5') {
+                activeBtn.classList.remove('bg-stone-200', 'text-stone-700');
+                activeBtn.classList.add('bg-stone-800', 'text-white');
+            } else {
+                activeBtn.classList.remove('bg-stone-50', 'border-transparent');
+                activeBtn.classList.add('bg-stone-100', 'border-stone-300', 'shadow-sm');
+            }
+        }
+
+        function toggleCheck(id) {
+            const item = state.checklist.find(i => i.id === id);
+            item.done = !item.done;
+            renderChecklist();
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('standards-checklist');
+            container.innerHTML = '';
+            state.checklist.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `flex items-center p-2 rounded cursor-pointer transition-colors ${item.done ? 'bg-emerald-50 text-emerald-900' : 'bg-stone-50 hover:bg-stone-100 text-stone-700'}`;
+                div.onclick = () => toggleCheck(item.id);
+                div.innerHTML = `
+                    <div class="mr-3 text-xl">${item.done ? '✅' : '⬜'}</div>
+                    <div class="text-sm ${item.done ? 'line-through text-emerald-700/70' : ''}">${item.text}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function initCharts() {
+            const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+            new Chart(gradeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chapter 1 (Day 5)', 'Chapter 2 (Day 6)', 'Remaining Chapters (3-6)'],
+                    datasets: [{
+                        data: [5, 5, 90],
+                        backgroundColor: ['#059669', '#10b981', '#e7e5e4'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            const resCtx = document.getElementById('resourceChart').getContext('2d');
+            new Chart(resCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Win10', 'Ubuntu Server', 'Kali Linux', 'OPNsense'],
+                    datasets: [
+                        {
+                            label: 'RAM (GB)',
+                            data: [4, 4, 4, 1],
+                            backgroundColor: '#059669'
+                        },
+                        {
+                            label: 'Disk (GB)',
+                            data: [60, 25, 40, 25],
+                            backgroundColor: '#d6d3d1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    let label = context[0].label || '';
+                                    if(label.length > 16) {
+                                        return label.substring(0, 16) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            renderChecklist();
+            initCharts();
+            nav('overview'); 
+        };
+    </script>
+</body>
+</html>
+
+
+
